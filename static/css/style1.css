@@ -1,3 +1,13 @@
+.producto-imagen {
+    max-width: 100%;          /* No excederá el ancho del contenedor */
+    max-height: 200px;        /* Limitará la altura para evitar el estiramiento */
+    width: auto;              /* Mantiene el ancho proporcional */
+    height: auto;             /* Mantiene la altura proporcional */
+    object-fit: contain;      /* Asegura que la imagen se ajuste sin estirarse */
+    display: block;           /* Centra la imagen dentro del contenedor */
+    margin: 0 auto;           /* Centrado horizontal */
+}
+
 .navbar-red {
     background: linear-gradient(#ff0000, #830000);
 

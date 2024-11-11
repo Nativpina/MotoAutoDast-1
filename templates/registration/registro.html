@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="height: 80vh;">
+    <div class="col-md-8 col-lg-6 shadow p-5 rounded" style="background-color: #f9f9f9;">
+        <h2 class="text-center mb-4">Crear una Cuenta</h2>
+
+        <!-- Bloque para mostrar mensajes de error o éxito -->
+
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group mb-3">
+                <label for="id_username" class="form-label">Nombre de usuario</label>
+                {{ form.username|add_class:"form-control rounded-pill p-3" }}
+            </div>
+            <div class="form-group mb-3">
+                <label for="id_email" class="form-label">Correo Electrónico</label>
+                {{ form.email|add_class:"form-control rounded-pill p-3" }}
+            </div>
+            <div class="form-group mb-3">
+                <label for="id_password1" class="form-label">Contraseña</label>
+                {{ form.password1|add_class:"form-control rounded-pill p-3" }}
+            </div>
+            <div class="form-group mb-3">
+                <label for="id_password2" class="form-label">Confirmar contraseña</label>
+                {{ form.password2|add_class:"form-control rounded-pill p-3" }}
+            </div>
+            <button type="submit" class="btn w-100 rounded-pill p-2" style="background: linear-gradient(#ff0000, #830000); color: white; border: none;">
+                Registrar
+            </button>
+        </form>
+
+        <div class="text-center mt-3">
+            <p>¿Ya tienes una cuenta? <a href="{% url 'login' %}" class="text-primary">Iniciar sesión</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

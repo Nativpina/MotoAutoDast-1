@@ -13,7 +13,11 @@ urlpatterns = [
     path('repuestos/', views.Repuestos, name='lista_repuestos'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('producto/<int:id>/', views.producto_detalle, name='producto_detalle'),
-    path('registration/olvidopass/', views.olvidopass, name='olvidopass'),
+    path('restablecer_contrasena/', views.restablecer_contrasena, name='restablecer_contrasena'),
+    path('contacto', views.contacto, name='contacto'),
+    path('registro/', views.registro, name='registro'), 
+    
+
 
 
     path('admin/', include('custom_admin.urls')),
