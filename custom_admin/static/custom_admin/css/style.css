@@ -1,0 +1,85 @@
+html, body {
+    background: linear-gradient(to bottom, #c50000, #000000);
+    height: 100%;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+.custom-login {
+    text-align: center;
+    padding: 30px;
+    width: 500px;
+    background: transparent;
+}
+
+
+.logo-container {
+    margin-bottom: 10px;
+}
+
+.logo {
+    width: 200px;
+    height: auto;
+}
+
+form {
+    text-align: left;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.form-actions button {
+    background-color: #ff4500;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+}
+
+.form-actions button:hover {
+    background-color: #ff6347;
+}
+
+.help-link {
+    display: block;
+    margin-top: 20px;
+    color: #ccc;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.help-link:hover {
+    text-decoration: underline;
+}
+
+.form-actions {
+    display: flex; /* Habilita Flexbox */
+    justify-content: center; /* Centra horizontalmente */
+    margin-top: 20px; /* Añade un margen superior para separar del resto */
+}
+
+button {
+    width: 50%; /* Opcional: Ajusta el tamaño del botón */
+}

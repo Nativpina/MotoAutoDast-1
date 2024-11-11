@@ -38,13 +38,14 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'custom_admin',
+    'MainApp',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'MainApp',
 ]
 
 MIDDLEWARE = [
@@ -134,4 +135,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #VARIABLES DE REDIRECCION DE LOGIN Y LOGOUT
 
 LOGIN_REDIRECT_URL = 'inicio'
-LOGOUT_REDIRECT_URL = 'inicio'
+LOGOUT_REDIRECT_URL = '/'

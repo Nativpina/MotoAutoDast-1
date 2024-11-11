@@ -14,7 +14,7 @@
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
         crossorigin="anonymous"
     />
-    <title>Iniciar Sesión</title>
+    <title>Recuperar Contraseña</title>
 </head>
 
 <body>
@@ -41,23 +41,19 @@
         </nav>
     </header>
 
-    <!-- Formulario de inicio de sesión -->
+    <!-- Formulario de recuperación de contraseña -->
     <div class="container d-flex align-items-center justify-content-center" style="height: 70vh;">
         <div class="col-md-4">
-            <h2 class="text-center mb-4">Inicia Sesión</h2>
+            <h2 class="text-center mb-4">Recuperar Contraseña</h2>
             <form method="post" class="shadow p-4 rounded">
                 {% csrf_token %}
                 <div class="mb-3">
-                    <label for="username" class="form-label">Usuario</label>
-                    <input class="form-control" type="text" name="username" id="username" required>
+                    <label for="email" class="form-label">Correo Electrónico</label>
+                    <input class="form-control" type="email" name="email" id="email" required>
                 </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Contraseña</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
-                </div>
-                <button type="submit" class="btn btn-dark w-100">Iniciar sesión</button>
+                <button type="submit" class="btn btn-dark w-100">Enviar enlace de recuperación</button>
                 <div class="text-center mt-3">
-                    <a href="{% url 'olvidopass' %}">¿Olvidaste tu contraseña?</a>
+                    <a href="{% url 'login' %}">Volver al inicio de sesión</a>
                 </div>
             </form>
         </div>

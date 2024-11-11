@@ -60,3 +60,6 @@ def Repuestos(req):
 def producto_detalle(req, id):
     producto = get_object_or_404(Producto, id=id)
     return render(req, 'producto_detalle.html', {'producto': producto})
+
+def olvidopass(request):
+    return render(request, 'registration/olvidopass.html')
