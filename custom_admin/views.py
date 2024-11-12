@@ -1,54 +1,59 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.views import LoginView
-from django.urls import reverse_lazy
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from MainApp.models import Producto, Compra, Cliente
-from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseRedirect
+from django.contrib.auth.models import User
 
 def admin_login(req):
     try:
-        # Si el usuario ya está autenticado, redirige directamente al dashboard
+        # Redirige al dashboard si el usuario ya está autenticado y es superusuario
         if req.user.is_authenticated:
-            return redirect('/admin/dashboard/')
-        
+            if req.user.is_superuser:
+                return redirect('/admin/dashboard/')
+            else:
+                return redirect('/')  # Redirige a la página de inicio si no es superusuario
+
         if req.method == 'POST':
-            # Obtener los datos del formulario
             username = req.POST.get('username')
             password = req.POST.get('password')
 
-            # Verificar si el usuario existe 
-            user_obj = User.objects.filter(username=username)
-            if not user_obj.exists():
+            # Verificar si el usuario existe
+            user_obj = User.objects.filter(username=username).first()
+            if not user_obj:
                 messages.info(req, 'Cuenta no encontrada')
                 return HttpResponseRedirect(req.META.get('HTTP_REFERER'))
             
             # Autenticar al usuario
             user_obj = authenticate(username=username, password=password)
-            
-            if user_obj and user_obj.is_superuser:
-                # Iniciar sesión si el usuario es superusuario
-                login(req, user_obj)
-                # Redirige al dashboard del administrador
-                return redirect('/admin/dashboard/')
-            
-            # Si las credenciales no son válidas
-            messages.info(req, 'Contraseña Incorrecta')
-            return redirect('/')
-        
-        # Renderizar la página de login si no es una solicitud POST
-        return render(req, 'Adminlogin.html')
+
+            if user_obj:
+                if user_obj.is_superuser:
+                    # Iniciar sesión y redirigir al dashboard si es superusuario
+                    login(req, user_obj)
+                    return redirect('/admin/dashboard/')
+                else:
+                    # Redirige a la página de inicio si el usuario no es superusuario
+                    messages.info(req, 'No tienes permiso para acceder a esta sección')
+                    return redirect('/')
+            else:
+                messages.info(req, 'Contraseña Incorrecta')
+                return HttpResponseRedirect(req.META.get('HTTP_REFERER'))
+
+        return render(req, 'admin/Adminlogin.html')
     
     except Exception as e:
         print(e)
 
 
+
 @login_required
 def dashboard(req):
-    return render(req, 'dashboard.html')
+    # Redirige a la página de inicio si el usuario no es superusuario
+    if not req.user.is_superuser:
+        return redirect('/')
+    return render(req, 'admin/dashboard.html')
+
     # Ejemplo de datos para el dashboard
     #total_pedidos_pendientes = Compra.objects.filter(estado='pendiente').count()
     #total_pedidos_enviados = Compra.objects.filter(estado='enviado').count()

@@ -2,12 +2,17 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
+from django.http import JsonResponse
+from django.db.models import Q
+from MainApp.forms import ProductoForm
 from .models import Producto, Categoria
 from .forms import CustomUserCreationForm  # Importa el formulario personalizado
 
 @login_required
-def inicio(req):
-    return render(req, 'inicio.html')
+def inicio(request):
+    if request.user.is_superuser:
+        return redirect('/admin/dashboard')
+    return render(request, 'inicio.html')
 
 def lista_productos(request):
     productos = Producto.objects.all()
@@ -72,3 +77,32 @@ def restablecer_contrasena(request):
 
 def contacto(request):
     return render(request, 'contacto.html', {'mostrar_busqueda': False})
+
+
+def buscar_productos(request):
+    query = request.GET.get('q')  # Captura el término de búsqueda desde el input "q"
+    productos = Producto.objects.filter(nombre_producto__icontains=query) if query else []
+    categoria = f"Resultados para '{query}'" if query else "Sin resultados"
+    return render(request, 'busqueda.html', {'productos': productos, 'categoria': categoria})
+
+def buscar_productos(request):
+    query = request.GET.get('q')  # Captura el término de búsqueda desde el input
+    productos = Producto.objects.filter(nombre_producto__icontains=query) if query else []
+    categoria = f"Resultados para '{query}'" if query else "Sin resultados"
+    return render(request, 'busqueda.html', {'productos': productos, 'categoria': categoria})
+
+def listar_productos(request):
+    productos = Producto.objects.all()  # Obtiene todos los productos
+    return render(request, 'admin/productos.html', {'productos': productos})
+
+
+def agregar_producto(request):
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('listar_productos')  # Redirige a la lista de productos
+    else:
+        form = ProductoForm()
+    
+    return render(request, 'admin/agregar_producto.html', {'form': form})

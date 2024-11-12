@@ -16,7 +16,8 @@ urlpatterns = [
     path('restablecer_contrasena/', views.restablecer_contrasena, name='restablecer_contrasena'),
     path('contacto', views.contacto, name='contacto'),
     path('registro/', views.registro, name='registro'), 
-    
+    path('buscar/', views.buscar_productos, name='buscar_productos'),
+
 
 
 

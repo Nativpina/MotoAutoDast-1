@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'custom_admin/css/dashboard.css' %}">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script src="https://kit.fontawesome.com/5d549a9b1e.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-2 sidebar p-3 bg-dark text-white">
+                <div class="text-center mb-4">
+                    <img src="{% static 'images/logo.png' %}" alt="Logo" class="img-fluid" style="width: 120px;" />
+                    <h4 class="mt-2">MotoAutodast</h4>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item mb-2">
+                        <a href="#" class="nav-link d-flex align-items-center">
+                            <i class="fa-solid fa-house me-2" style="font-size: 1.5em; color: #ffffff;"></i> 
+                            <span>Inicio</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a href="{% url 'listar_productos' %}" class="nav-link d-flex align-items-center">
+                            <i class="fa-solid fa-clipboard-list me-2" style="font-size: 1.5em; color: #ffffff;"></i> 
+                            <span>Productos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a href="#" class="nav-link d-flex align-items-center">
+                            <i class="fa-solid fa-wallet me-2" style="font-size: 1.5em; color: #ffffff;"></i> 
+                            <span>Pagos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a href="#" class="nav-link d-flex align-items-center">
+                            <i class="fa-solid fa-gear me-2" style="font-size: 1.5em; color: #ffffff;"></i> 
+                            <span>Ajustes</span>
+                        </a>
+                    </li>
+                </ul>
+                <button class="btn btn-danger w-100 mt-auto">Cerrar Sesión</button>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-10 p-4">
+                <h1 class="mb-4">Productos</h1>
+
+                <!-- Iconos e Input -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <a href="{% url 'agregar_producto' %}" class="btn btn-primary me-2">
+                            <i class="fa-solid fa-plus"></i> Agregar
+                        </a>
+                    </div>
+                    <div class="input-group" style="width: 300px;">
+                        <input type="text" class="form-control" placeholder="Buscar producto...">
+                        <button class="btn btn-outline-secondary"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+
+                <!-- Tabla con barra de desplazamiento -->
+                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; padding: 10px;">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th>Categoría</th>
+                                <th>Bodega</th>
+                                <th>Costo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for producto in productos %}
+                            <tr>
+                                <td>{{ producto.id }}</td>
+                                <td>{{ producto.nombre_producto }}</td>
+                                <td>{{ producto.descripcion }}</td>
+                                <td>{{ producto.categoria.nombre_categoria }}</td>
+                                <td>{{ producto.bodega.nombre_bodega }}</td>
+                                <td>{{ producto.costo }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No hay productos disponibles.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>
