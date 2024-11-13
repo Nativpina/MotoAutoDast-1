@@ -1,0 +1,35 @@
+{% extends 'admin/baseAdmin.html' %}
+{% block content %}
+<h1 class="mb-4 tcolor">Mensajes de Contacto</h1>
+
+<div style="max-height: 700px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; padding: 10px;">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Asunto</th>
+                <th>Mensaje</th>
+                <th>Fecha de Envío</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for contacto in contactos %}
+            <tr>
+                <td>{{ contacto.id }}</td>
+                <td>{{ contacto.nombre }}</td>
+                <td>{{ contacto.email }}</td>
+                <td>{{ contacto.asunto }}</td>
+                <td>{{ contacto.mensaje }}</td>
+                <td>{{ contacto.fecha_envio }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No hay mensajes de contacto.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

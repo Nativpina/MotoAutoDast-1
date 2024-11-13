@@ -7,7 +7,6 @@ from django.contrib.auth.models import User
 
 def admin_login(req):
     try:
-        # Redirige al dashboard si el usuario ya está autenticado y es superusuario
         if req.user.is_authenticated:
             if req.user.is_superuser:
                 return redirect('/admin/dashboard/')

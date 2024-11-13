@@ -13,15 +13,12 @@ urlpatterns = [
     path('repuestos/', views.Repuestos, name='lista_repuestos'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('producto/<int:id>/', views.producto_detalle, name='producto_detalle'),
-    path('restablecer_contrasena/', views.restablecer_contrasena, name='restablecer_contrasena'),
-    path('contacto', views.contacto, name='contacto'),
     path('registro/', views.registro, name='registro'), 
     path('buscar/', views.buscar_productos, name='buscar_productos'),
-
-
-
-
+    path('contacto/', views.form_contacto, name='form_contactos'),
+    path('ayudaLogin/', views.ayudaLogin, name='ayudaLogin'),
     path('admin/', include('custom_admin.urls')),
+
 
     path('dj-admin/', admin.site.urls),
 ]

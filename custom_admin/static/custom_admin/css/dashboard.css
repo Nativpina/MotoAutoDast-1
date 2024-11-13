@@ -26,6 +26,7 @@ body {
 
 .sidebar a:hover {
     background-color: #8b0000;
+    color: #cccccc; /* Cambia el color del texto a gris claro */
     border-radius: 5px;
 }
 
@@ -36,4 +37,11 @@ body {
 
 main {
     margin-left: 320px;
+}
+
+.tcolor{
+    background: linear-gradient(to bottom, #c50000, #740000);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }

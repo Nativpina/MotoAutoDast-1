@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Ingreso Administrador</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{% static 'custom_admin/css/style.css' %}">
+    <script src="https://kit.fontawesome.com/5d549a9b1e.js" crossorigin="anonymous"></script>
+
+    <!-- Bootstrap CSS v5.3.2 -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+        crossorigin="anonymous"
+    />
+</head>
+<body>
+    <div class="custom-login">
+        <!-- Logo -->
+        <div class="logo-container">
+            <img src="{% static 'custom_admin/images/logo.png' %}" alt="Logo" class="logo">
+        </div>
+        {% block content %}
+        {% endblock %}
+        <!-- Título -->
+
+    </div>
+</body>
+
+
+</html>

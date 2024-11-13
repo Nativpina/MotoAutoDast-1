@@ -44,17 +44,21 @@
                         </a>
                     </li>
                 </ul>
-                <a href="{% url 'admin_logout' %}" class="btn btn-danger w-100 mt-auto">Cerrar Sesión</a>
+                <form action="{% url 'admin_logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger w-100 mt-auto">Cerrar sesión</button>
+                </form>                 
             </nav>
 
             <!-- Main Content -->
             <main class="col-md-10 p-4">
-                <h1 class="mb-4">Productos</h1>
+                <div class="container">
+                <h1 class="mb-4 tcolor">Productos</h1>
 
                 <!-- Iconos e Input -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <a href="{% url 'agregar_producto' %}" class="btn btn-primary me-2">
+                        <a href="{% url 'agregar_producto' %}" class="btn btn-danger me-2 tcolor">
                             <i class="fa-solid fa-plus"></i> Agregar
                         </a>
                     </div>
@@ -67,8 +71,8 @@
                 </div>
 
                 <!-- Tabla con barra de desplazamiento -->
-                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; padding: 10px;">
-                    <table class="table table-striped" id="productTable">
+                <div style="max-height: 700px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; padding: 10px;">
+                    <table class="table table-striped" id="productTable" style="height: 100%px;">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -113,6 +117,7 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
             </main>
         </div>
     </div>

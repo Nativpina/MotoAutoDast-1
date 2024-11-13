@@ -4,11 +4,10 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q
-from MainApp.forms import ProductoForm
-from .models import Producto, Categoria, Categoria, Bodega, Producto
+from MainApp.forms import ProductoForm, ContactoForm
+from .models import Producto, Categoria, Categoria, Bodega, Producto, Contacto
 from .forms import CustomUserCreationForm  # Importa el formulario personalizado
 
-@login_required
 def inicio(request):
     productos = Producto.objects.all()  
     return render(request, 'inicio.html', {'productos': productos})
@@ -30,7 +29,6 @@ def registro(request):
         form = CustomUserCreationForm()  # Usa el formulario personalizado
     return render(request, 'registration/registro.html', {'form': form})
 
-@login_required
 def Aceites(req):
     try:
         categoria = Categoria.objects.get(nombre_categoria="Aceite")
@@ -39,7 +37,6 @@ def Aceites(req):
         productos = []
     return render(req, 'catalogo.html', {'productos': productos, 'categoria': 'Aceite'})
 
-@login_required
 def Accesorios(req):
     try:
         categoria = Categoria.objects.get(nombre_categoria="Accesorios")
@@ -48,7 +45,6 @@ def Accesorios(req):
         productos = []
     return render(req, 'catalogo.html', {'productos': productos, 'categoria': 'Accesorios'})
 
-@login_required
 def Neumaticos(req):
     try:
         categoria = Categoria.objects.get(nombre_categoria="Neumaticos")
@@ -57,7 +53,6 @@ def Neumaticos(req):
         productos = []
     return render(req, 'catalogo.html', {'productos': productos, 'categoria': 'Neumáticos'})
 
-@login_required
 def Repuestos(req):
     try:
         categoria = Categoria.objects.get(nombre_categoria="Repuestos")
@@ -66,7 +61,6 @@ def Repuestos(req):
         productos = []
     return render(req, 'catalogo.html', {'productos': productos, 'categoria': 'Repuestos'})
 
-@login_required
 def producto_detalle(req, id):
     producto = get_object_or_404(Producto, id=id)
     return render(req, 'producto_detalle.html', {'producto': producto})
@@ -74,8 +68,8 @@ def producto_detalle(req, id):
 def restablecer_contrasena(request):
     return render(request, 'registration/restablecer_contrasena.html', {'mostrar_busqueda': False})
 
-def contacto(request):
-    return render(request, 'contacto.html', {'mostrar_busqueda': False})
+
+
 
 
 def buscar_productos(request):
@@ -91,11 +85,15 @@ def buscar_productos(request):
     return render(request, 'busqueda.html', {'productos': productos, 'categoria': categoria})
 
 def listar_productos(request):
+    if not request.user.is_superuser:
+        return redirect('/')
     productos = Producto.objects.all()  # Obtiene todos los productos
     return render(request, 'admin/productos.html', {'productos': productos})
 
 
 def agregar_producto(request):
+    if not request.user.is_superuser:
+        return redirect('/')
     if request.method == 'POST':
         form = ProductoForm(request.POST, request.FILES)
         if form.is_valid():
@@ -115,6 +113,8 @@ def agregar_producto(request):
     })
 
 def editar_producto(request, producto_id):
+    if not request.user.is_superuser:
+        return redirect('/')    
     # Obtén el producto a editar
     producto = get_object_or_404(Producto, id=producto_id)
 
@@ -138,6 +138,8 @@ def editar_producto(request, producto_id):
     })
 
 def eliminar_producto(request, producto_id):
+    if not request.user.is_superuser:
+        return redirect('/')  
     producto = get_object_or_404(Producto, id=producto_id)
 
     if request.method == 'POST':
@@ -145,3 +147,29 @@ def eliminar_producto(request, producto_id):
         return redirect('listar_productos')  # Redirige a la lista de productos después de eliminar
 
     return render(request, 'admin/confirmar_eliminacion.html', {'producto': producto})
+
+
+def form_contacto(request):
+    if request.method == 'POST':
+        form = ContactoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_contactos')  # Redirige a la página donde se muestran los contactos
+    else:
+        form = ContactoForm()
+    
+    return render(request, 'contacto.html', {'form': form, 'mostrar_busqueda': False})
+
+def lista_contactos(request):
+    if not request.user.is_superuser:
+        return redirect('/')  
+    contactos = Contacto.objects.all().order_by('-fecha_envio')
+    return render(request, 'admin/listaContacto.html', {'contactos': contactos})
+
+def ajustes(request):
+    if not request.user.is_superuser:
+        return redirect('/')  
+    return render(request, 'admin/ajustes.html')
+
+def ayudaLogin(request):
+    return render(request, 'admin/AyudaLogin.html')
