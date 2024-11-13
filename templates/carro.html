@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<main>
+    <h1>Carrito de Compras</h1>
+    <div class="cart-container">
+        {% if cart.items %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart.items %}
+                        <tr>
+                            <td>{{ item.product.name }}</td>
+                            <td>${{ item.product.price }}</td>
+                            <td>
+                                <form method="post" action="{% url 'update_cart' item.product.id %}">
+                                    {% csrf_token %}
+                                    <input type="number" name="quantity" value="{{ item.quantity }}" min="1">
+                                    <button type="submit">Actualizar</button>
+                                </form>
+                            </td>
+                            <td>${{ item.total_price }}</td>
+                            <td>
+                                <form method="post" action="{% url 'remove_from_cart' item.product.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit">Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="cart-summary">
+                <p><strong>Total:</strong> ${{ cart.total }}</p>
+                <a href="{% url 'checkout' %}" class="btn btn-primary">Proceder al Pago</a>
+            </div>
+        {% else %}
+            <p>Tu carrito está vacío.</p>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}

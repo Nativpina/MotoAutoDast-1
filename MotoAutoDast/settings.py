@@ -94,20 +94,23 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
+
+AUTH_PASSWORD_VALIDATORS = []
+
+#AUTH_PASSWORD_VALIDATORS = [
+    #{
+    #    'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    #},
+    #{
+    #    'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    #},
+    #{
+    #    'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    #},
+    #{
+    #    'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    #},
+#]
 
 
 # Internationalization
@@ -135,5 +138,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #VARIABLES DE REDIRECCION DE LOGIN Y LOGOUT
 
-LOGIN_REDIRECT_URL = 'inicio'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'inicio'
+
+#VARIABLES DE RESTABLECIMIENTO DE CUENTAS
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587  # Gmail utiliza TLS en el puerto 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'motoautodast8@gmail.com'  # Dirección del correo del bot
+EMAIL_HOST_PASSWORD = 'MotoAutoDast2024'  # Contraseña del bot o App Password
+DEFAULT_FROM_EMAIL = 'motoautodast8@gmail.com'  # Correo remitente

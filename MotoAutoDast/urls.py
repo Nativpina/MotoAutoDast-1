@@ -22,10 +22,14 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='inicio.html'), name='logout'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),  # Eliminar el parámetro next_page
+    path('accounts/', include('MainApp.urls')),
     path('', include('MainApp.urls')),
-    
-    
+
+    path('restablecer_contrasena/', auth_views.PasswordResetView.as_view(template_name='registration/restablecer_contrasena.html'), name='password_reset'),
+    path('restablecer_contrasena/enviado/', auth_views.PasswordResetDoneView.as_view(template_name='registration/password_reset_done.html'), name='password_reset_done'),
+    path('restablecer_contrasena/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='registration/password_reset_confirm.html'), name='password_reset_confirm'),
+    path('restablecer_contrasena/completo/', auth_views.PasswordResetCompleteView.as_view(template_name='registration/password_reset_complete.html'), name='password_reset_complete'),    
 
 ]
 

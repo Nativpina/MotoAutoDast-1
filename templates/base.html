@@ -30,7 +30,8 @@
                     <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'lista_accesorios' %}">Accesorios</a></li>
                     <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'lista_neumaticos' %}">Neumáticos</a></li>
                     <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'lista_repuestos' %}">Repuestos</a></li>
-                    <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'contacto' %}">Contacto</a></li>
+                    <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'form_contactos' %}">Contacto</a></li>
+                    <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'admin_login' %}">BOTON TEMPORAL ADMIN</a></li>
                 </ul>
                 {% if request.path != '/contacto' and request.path != '/restablecer_contrasena/' %}
                 <form action="{% url 'buscar_productos' %}" method="get" class="mx-auto" style="max-width: 400px; width: 100%;">
@@ -42,13 +43,17 @@
                             </button>
                         </span>
                     </div>
+                    
                 </form>
                 {% endif %}
                 <div class="d-flex">
                     {% if user.is_authenticated %}
-                        <span class="me-3 fw-bold">Hola, {{ user.username }}</span>
-                        <a href="{% url 'logout' %}" class="me-3 fw-bold rounded-pill">Cerrar sesión</a>
-                    {% else %}
+                        <span class="me-3 fw-bold text-white">Hola, {{ user.username }}</span>
+                        <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="me-3 fw-bold rounded-pill">Cerrar sesión</button>
+                        </form>                    
+                        {% else %}
                         <a href="{% url 'login' %}" class="me-3 fw-bold">Iniciar sesión</a>
                         <a href="{% url 'registro' %}" class="fw-bold">Registrarse</a>
                         {% endif %}
