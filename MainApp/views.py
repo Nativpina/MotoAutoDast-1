@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q
 from MainApp.forms import ProductoForm, ContactoForm
-from .models import Producto, Categoria, Categoria, Bodega, Producto, Contacto, Carro
+from .models import Producto, Categoria, Categoria, Bodega, Producto, Contacto
 from .forms import CustomUserCreationForm  # Importa el formulario personalizado
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -15,7 +15,11 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.contrib.auth.tokens import default_token_generator
-from decimal import Decimal
+
+
+
+
+
 
 
 def inicio(request):
@@ -207,43 +211,3 @@ def enviar_email_con_nombre_usuario(request, user_email):
     email = EmailMultiAlternatives(subject, message, settings.DEFAULT_FROM_EMAIL, [user_email])
     email.attach_alternative(message, "text/html")
     email.send()
-    
-def carro(request):
-    # Obtén todos los productos en el carrito
-    productos_carro = Carro.objects.all()
-
-    # Calcula el subtotal
-    subtotal = sum(Decimal(item.precio_total) for item in productos_carro)
-
-    # Define un IVA de ejemplo (21%)
-    iva = subtotal * Decimal('0.21')
-
-    # Total con IVA incluido
-    total = subtotal + iva
-
-    context = {
-        'productos_carro': productos_carro,
-        'subtotal': subtotal,
-        'iva': iva,
-        'total': total,
-    }
-    return render(request, 'carro.html', context)
-
-def agregar_al_carro(request, producto_id):
-    producto = get_object_or_404(Producto, id=producto_id)
-
-    # Busca si el producto ya está en el carrito
-    carro_item, creado = Carro.objects.get_or_create(producto=producto)
-    
-    if not creado:
-        # Si ya existe, incrementa la cantidad
-        carro_item.cantidad += 1
-        carro_item.calcular_precio_total()
-    else:
-        # Si es nuevo, calcula el precio total inicial
-        carro_item.calcular_precio_total()
-
-    carro_item.save()
-    
-    # Redirige a la página del carrito o al detalle del producto
-    return redirect('carro')

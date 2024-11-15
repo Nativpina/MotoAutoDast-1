@@ -16,12 +16,8 @@ urlpatterns = [
     path('registro/', views.registro, name='registro'), 
     path('buscar/', views.buscar_productos, name='buscar_productos'),
     path('contacto/', views.form_contacto, name='form_contactos'),
-    path('carro/', views.carro, name='carro'),
-    path('carro/agregar/<int:producto_id>/', views.agregar_al_carro, name='agregar_al_carro'),
-
     path('ayudaLogin/', views.ayudaLogin, name='ayudaLogin'),
     path('admin/', include('custom_admin.urls')),
-
 
 
     path('dj-admin/', admin.site.urls),

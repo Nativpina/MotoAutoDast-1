@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cliente, Administrador, Bodega, Categoria, Producto, Compra, Carro, Ingreso
+from .models import Cliente, Administrador, Bodega, Categoria, Producto, Compra, ProductoCompra, Ingreso
 from django.utils.html import format_html
 # Register your models here.
 
@@ -37,17 +37,10 @@ class CompraAdmin(admin.ModelAdmin):
     list_filter = ('fecha_compra',)
     search_fields = ('cliente__nombre_cliente',)
 
-@admin.register(Carro)
-class CarroAdmin(admin.ModelAdmin):
-    list_display = ('id', 'producto', 'cantidad', 'precio_total')
-    list_filter = ('producto',)
-    search_fields = ('producto__nombre_producto',)
-    readonly_fields = ('precio_total',)
-
-    def save_model(self, request, obj, form, change):
-        # Actualiza el precio total al guardar
-        obj.calcular_precio_total()
-        super().save_model(request, obj, form, change)
+@admin.register(ProductoCompra)
+class ProductoCompraAdmin(admin.ModelAdmin):
+    list_display = ('id', 'compra', 'producto', 'cantidad', 'precio_unitario_venta')
+    list_filter = ('compra', 'producto')
 
 @admin.register(Ingreso)
 class IngresoAdmin(admin.ModelAdmin):
