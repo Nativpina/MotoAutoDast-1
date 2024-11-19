@@ -8,14 +8,17 @@
    cd MotoAutoDust
 
 2. Crea y activa un entorno virtual:
+   ```bash
     python -m venv env
     source env/bin/activate  # Para Linux/Mac
     env\Scripts\activate     # Para Windows
 
 3. Instala las dependencias:
+   ```bash
     pip install -r requirements.txt
 
 4. Realiza las migraciones e inicia el servidor:
+   ```bash
     python manage.py migrate
     python manage.py runserver
 
