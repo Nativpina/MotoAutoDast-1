@@ -27,6 +27,7 @@
 ### Alternativa para los requerimientos
 
 1. Iniciar el setup.sh
+    ```bash
     bash setup.sh
     ./setup.sh
 
