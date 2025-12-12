@@ -1,8 +1,11 @@
 from django.db import models
+from django.contrib.auth.models import User
 
-# Create your models here.
+
+
 
 class Cliente(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     nombre_cliente = models.CharField(max_length=255)
     email = models.EmailField(max_length=255)
     num = models.IntegerField()
@@ -44,7 +47,20 @@ class Producto(models.Model):
 
 class Compra(models.Model):
     fecha_compra = models.DateField()
+    direccion_envio = models.CharField(max_length=255, null=True, blank=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    ESTADOS = [
+        ('pendiente', 'Pendiente'),
+        ('enviado', 'Enviado'),
+        ('cancelado', 'Cancelado'),
+    ]
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='pendiente')
+    monto = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    TIPO_ENTREGA = [
+        ("retiro", "Retiro en tienda"),
+        ("envio", "Envío a domicilio"),
+    ]
+    tipo_entrega = models.CharField(max_length=20, choices=TIPO_ENTREGA, default="envio")
 
     def __str__(self):
         return f"Compra {self.id} - Cliente: {self.cliente.nombre_cliente}"
@@ -79,9 +95,6 @@ class Contacto(models.Model):
         return f"{self.nombre} - {self.asunto}"
     
 
-from django.db import models
-from django.contrib.auth.models import User
-from MainApp.models import Producto
 
 class Cart(models.Model):
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE, null=True, blank=True)
@@ -97,3 +110,39 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f"{self.cantidad} x {self.producto.nombre_producto} en carrito {self.cart.id}"
+    
+
+class Orden(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    buy_order = models.CharField(max_length=100)
+    authorization_code = models.CharField(max_length=20)
+    accounting_date = models.CharField(max_length=10)
+    monto_total = models.IntegerField()
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    productos = models.JSONField()  # Guarda el carrito completo
+
+    def __str__(self):
+        return f"Orden {self.buy_order} - {self.usuario.username}"
+    
+
+class Boleta(models.Model):
+    numero = models.AutoField(primary_key=True)  
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    fecha_emision = models.DateTimeField(auto_now_add=True)
+    direccion = models.CharField(max_length=255, default="Pasaje Piedras Negras 9483")
+    monto_total = models.IntegerField()
+
+
+    detalle = models.JSONField()
+
+    def __str__(self):
+        return f"Boleta N°{self.numero} - {self.usuario.username}"
+
+class Visita(models.Model):
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, null=True, blank=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Visita a {self.producto} en {self.fecha}"
+    

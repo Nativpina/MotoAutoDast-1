@@ -183,3 +183,25 @@ h1.cart-title {
     text-decoration: none;
 }
 
+/* --- Ajustar el campo Cantidad --- */
+input[type="number"] {
+    width: 90px !important;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+/* --- Botón negro personalizado --- */
+.btn-add-cart {
+    background-color: #000 !important;
+    color: white !important;
+    border: none !important;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.btn-add-cart:hover {
+    background-color: #333 !important;
+}

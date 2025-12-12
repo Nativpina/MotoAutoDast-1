@@ -21,13 +21,15 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from MainApp.forms import CustomPasswordResetForm 
 
+
 urlpatterns = [
+    path('admin/', include('custom_admin.urls')), # si no estaba, agrégalo
+
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('accounts/', include('MainApp.urls')),
-    path('', include('MainApp.urls')),
 
-    # Configuración de restablecimiento de contraseña
+    path('accounts/', include('MainApp.urls')),
+    path('', include('MainApp.urls')),   
     path('restablecer_contrasena/', auth_views.PasswordResetView.as_view(
         form_class=CustomPasswordResetForm,
         template_name='registration/restablecer_contrasena.html',
@@ -35,9 +37,13 @@ urlpatterns = [
         subject_template_name='registration/password_reset_subject.txt',
         html_email_template_name='password_reset_email.html'
     ), name='password_reset'),
-    path('restablecer_contrasena/enviado/', auth_views.PasswordResetDoneView.as_view(template_name='registration/password_reset_done.html'), name='password_reset_done'),
-    path('restablecer_contrasena/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='registration/password_reset_confirm.html'), name='password_reset_confirm'),
-    path('restablecer_contrasena/completo/', auth_views.PasswordResetCompleteView.as_view(template_name='registration/password_reset_complete.html'), name='password_reset_complete'),
+    path('restablecer_contrasena/enviado/', auth_views.PasswordResetDoneView.as_view(
+        template_name='registration/password_reset_done.html'), name='password_reset_done'),
+    path('restablecer_contrasena/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(
+        template_name='registration/password_reset_confirm.html'), name='password_reset_confirm'),
+    path('restablecer_contrasena/completo/', auth_views.PasswordResetCompleteView.as_view(
+        template_name='registration/password_reset_complete.html'), name='password_reset_complete'),
+    
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

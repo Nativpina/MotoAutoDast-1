@@ -1,101 +1,142 @@
 {% extends 'admin/baseAdmin.html' %}
 {% load static %}
+
 {% block content %}
-            <!-- Main Content -->
 
-                <h1 class="mb-4 tcolor">Dashboard</h1>
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="card p-3">
-                            <h5>Contactos</h5>
-                            <p>Pendientes: <strong>14</strong></p>
-                            <p>Leídos: <strong>20</strong></p>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card p-3">
-                            <h5>Pedidos Pendientes</h5>
-                            <p><strong>19</strong> Pedidos</p>
-                            <p><strong></strong></p>
+<h1 class="mb-4 tcolor">Dashboard</h1>
 
-                        </div>  
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card p-3">
-                            <h5>Pedidos Enviados</h5>
-                            <p><strong>36</strong> Pedidos</p>
-                            <p><strong></strong></p>
+<style>
+    .metric-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        border: 1px solid #eee;
+    }
 
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card p-3">
-                            <h5>Ventas Totales</h5>
-                            <p><strong>$900</strong></p>
-                            <p><strong></strong></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-4">
-                    <div class="col-md-8">
-                        <div class="card p-4">
-                            <h5>Visitas de este Mes</h5>
-                            <canvas id="myChart" width="400" height="200"></canvas>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card p-4">
-                            <h5>Categorías Más Vistas</h5>
-                            <canvas id="pieChart" width="200" height="200"></canvas>
-                        </div>
-                    </div>
-                </div>
+    /* Evita que los gráficos se estiren hacia abajo */
+    .chart-container {
+        height: 350px;
+        position: relative;
+    }
+
+    .card canvas {
+        max-height: 330px !important;
+    }
+</style>
+
+<!-- TARJETAS SUPERIORES -->
+<div class="row mb-4">
+
+    <div class="col-md-4">
+        <div class="metric-card">
+            <h6>Pedidos Pendientes</h6>
+            <p><strong>{{ total_pedidos_pendientes }}</strong> Pedidos</p>
         </div>
     </div>
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-mQ93gHn8RdOhz8MaQZr+8ABP1rYQC7D2eIqCrPgHJqI4V3eT3UFMQDz4O3iSmJFg" crossorigin="anonymous"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // Line Chart
-        const ctx = document.getElementById('myChart').getContext('2d');
-        const myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Enero', 'Febrero', 'Marzo', 'Abril'],
-                datasets: [{
-                    label: 'Visitas',
-                    data: [12, 19, 3, 5],
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true
-            }
-        });
 
-        // Pie Chart
-        const pieCtx = document.getElementById('pieChart').getContext('2d');
-        const pieChart = new Chart(pieCtx, {
-            type: 'pie',
-            data: {
-                labels: ['Neumáticos', 'Repuestos', 'Aceites'],
-                datasets: [{
-                    label: 'Categorías Más Vistas',
-                    data: [45, 32, 23],
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.8)',
-                        'rgba(54, 162, 235, 0.8)',
-                        'rgba(255, 206, 86, 0.8)'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true
-            }
-        });
-    </script>
+    <div class="col-md-4">
+        <div class="metric-card">
+            <h6>Pedidos Enviados</h6>
+            <p><strong>{{ total_pedidos_enviados }}</strong> Pedidos</p>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="metric-card">
+            <h6>Ventas Totales</h6>
+            <p><strong>${{ total_ventas }}</strong></p>
+        </div>
+    </div>
+
+</div>
+
+<!-- GRÁFICOS -->
+<div class="row">
+
+    <!-- VISITAS DEL AÑO -->
+    <div class="col-md-8">
+        <div class="card p-3">
+            <h5 class="mb-3">Visitas del Año</h5>
+
+            <div class="chart-container">
+                <canvas id="myChart"></canvas>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- CATEGORÍAS MÁS VISTAS -->
+    <div class="col-md-4">
+        <div class="card p-3">
+            <h5 class="mb-3">Categorías Más Vistas</h5>
+
+            <div class="chart-container">
+                <canvas id="pieChart"></canvas>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- JSON seguro -->
+{{ meses_labels|json_script:"meses-labels" }}
+{{ visitas_data|json_script:"visitas-data" }}
+{{ categorias_labels|json_script:"categorias-labels" }}
+{{ categorias_valores|json_script:"categorias-valores" }}
+
+<!-- CHART.JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // VISITAS DEL AÑO
+    const meses = JSON.parse(document.getElementById('meses-labels').textContent);
+    const visitas = JSON.parse(document.getElementById('visitas-data').textContent);
+
+    new Chart(document.getElementById('myChart'), {
+        type: 'line',
+        data: {
+            labels: meses,
+            datasets: [{
+                label: 'Visitas',
+                data: visitas,
+                borderColor: '#ff6384',
+                backgroundColor: 'rgba(255, 99, 132, 0.3)',
+                borderWidth: 2,
+                tension: 0.3,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    // CATEGORÍAS MÁS VISTAS
+    const categoriasLabels = JSON.parse(document.getElementById('categorias-labels').textContent);
+    const categoriasValores = JSON.parse(document.getElementById('categorias-valores').textContent);
+
+    new Chart(document.getElementById('pieChart'), {
+        type: 'pie',
+        data: {
+            labels: categoriasLabels,
+            datasets: [{
+                data: categoriasValores,
+                backgroundColor: [
+                    '#ff6384', 
+                    '#36a2eb', 
+                    '#ffcd56', 
+                    '#9966ff'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+</script>
+
 {% endblock %}
-

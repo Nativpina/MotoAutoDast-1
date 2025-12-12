@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+
+<style>
+/* Card estilo Amazon */
+.order-card {
+    border: 1px solid #e3e6e9;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: #ffffff;
+    transition: 0.2s ease-in-out;
+}
+.order-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* Estados */
+.status-badge {
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    border-radius: 20px;
+    font-weight: 600;
+}
+.status-pending { background: #fff3cd; color: #856404; }
+.status-sent    { background: #cce5ff; color: #004085; }
+.status-done    { background: #d4edda; color: #155724; }
+.status-cancel  { background: #f8d7da; color: #721c24; }
+
+/* Botón negro */
+.btn-details-dark {
+    background: #111111;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: none;
+    text-decoration: none;
+}
+.btn-details-dark:hover {
+    background: #333333;
+    color: #ffffff;
+}
+
+/* Texto */
+.order-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+.order-info {
+    font-size: 0.95rem;
+}
+</style>
+
+<div class="container py-4">
+
+    <h2 class="fw-bold text-center mb-4">Mis pedidos</h2>
+
+    {% if pedidos %}
+
+        {% for p in pedidos %}
+        <div class="order-card">
+
+            <div class="row align-items-center">
+
+                <!-- Información -->
+                <div class="col-md-8">
+                    <div class="order-title mb-2">
+                        Pedido #{{ p.id }}
+                    </div>
+
+                    <div class="order-info mb-1">
+                        <strong>Fecha:</strong> {{ p.fecha_compra|date:"d/m/Y" }}
+                    </div>
+
+                    <div class="order-info mb-1">
+                        <strong>Monto:</strong> ${{ p.monto|intcomma }}
+                    </div>
+
+                    <div class="order-info mb-2">
+                        <strong>Entrega:</strong>
+                        {% if p.tipo_entrega == "retiro" %}
+                            🚗 Retiro en tienda
+                        {% else %}
+                            🏠 Envío a domicilio
+                        {% endif %}
+                    </div>
+
+                    <!-- Estado -->
+                    <div>
+                        {% if p.estado == "pendiente" %}
+                            <span class="status-badge status-pending">Pendiente</span>
+                        {% elif p.estado == "enviado" %}
+                            <span class="status-badge status-sent">Enviado</span>
+                        {% elif p.estado == "completado" %}
+                            <span class="status-badge status-done">Completado</span>
+                        {% else %}
+                            <span class="status-badge status-cancel">Cancelado</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Acción -->
+                <div class="col-md-4 text-end">
+                    <a href="{% url 'pedido_detalle' p.id %}" class="btn-details-dark">
+                        Ver detalles →
+                    </a>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+
+    {% else %}
+        <p class="text-center text-muted">No tienes pedidos registrados.</p>
+    {% endif %}
+
+</div>
+
+{% endblock %}

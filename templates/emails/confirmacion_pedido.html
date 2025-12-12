@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmación de Pedido - MotoAutoDast</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: auto;
+            border: 1px solid #ddd;
+        }
+        h2 {
+            color: #d92332;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+        .detalle {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 6px;
+            border: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>¡Gracias por tu compra, {{ cliente.nombre_cliente }}!</h2>
+
+    <p>Hemos recibido tu pedido con éxito.</p>
+
+    <p><strong>Número de Pedido:</strong> #{{ compra.id }}</p>
+    <p><strong>Fecha:</strong> {{ compra.fecha_compra }}</p>
+    <p><strong>Monto Total:</strong> ${{ compra.monto }}</p>
+
+    <div class="detalle">
+        <h3>¿Qué sucede ahora?</h3>
+        <p>Tu pedido ha sido procesado y está en estado <strong>PENDIENTE</strong>.</p>
+        <p>Pronto será preparado y enviado a tu domicilio.</p>
+        <p>Podrás visualizar el estado en tu panel de usuario dentro de <strong>“Mis pedidos”.</strong></p>
+    </div>
+
+    <p>Si tienes dudas, contáctanos respondiendo este correo.</p>
+
+    <div class="footer">
+        MotoAutoDast © {{ now|date:"Y" }}<br>
+        Este correo fue generado automáticamente. Por favor, no respondas a esta dirección.
+    </div>
+</div>
+
+</body>
+</html>

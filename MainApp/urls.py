@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from MainApp import views
 
+
 admin.site.login_template = "admin/Adminlogin.html" 
 
 urlpatterns = [
@@ -16,14 +17,17 @@ urlpatterns = [
     path('registro/', views.registro, name='registro'), 
     path('buscar/', views.buscar_productos, name='buscar_productos'),
     path('contacto/', views.form_contacto, name='form_contactos'),
-    path('ayudaLogin/', views.ayudaLogin, name='ayudaLogin'),
-    path('admin/', include('custom_admin.urls')),
     path('carro/agregar/<int:producto_id>/', views.add_to_cart, name='add_to_cart'),
     path('carro/', views.view_cart, name='view_cart'),
     path('carro/eliminar/<str:key>/', views.remove_from_cart, name='remove_from_cart'),
     path('checkout/', views.checkout, name='checkout'),
-    
-
+    path('pago/webpay/', views.iniciar_pago, name='iniciar_pago'),
+    path('pago/webpay/commit/', views.webpay_commit, name='webpay_commit'),
+    path('boleta/<int:boleta_id>/descargar/', views.descargar_boleta, name='descargar_boleta'),
+    path('api/recomendar/<int:producto_id>/', views.recomendar_productos, name='recomendar_productos'),
+    path("mis-pedidos/", views.mis_pedidos, name="mis_pedidos"),
+    path("pedido/<int:pedido_id>/", views.detalle_pedido, name="detalle_pedido"),
+    path("pedido-detalle/<int:pedido_id>/", views.pedido_detalle, name="pedido_detalle"),
 
 
     path('dj-admin/', admin.site.urls),

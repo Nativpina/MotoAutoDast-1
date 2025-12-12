@@ -3,34 +3,54 @@
 
 {% block content %}
 <main>
+
+    <!-- Sección de título / categoría -->
     <div class="hero-section" style="background: linear-gradient(to right, #e0e0e0, #0a0a0acc); height: 150px; position: relative;">
-        <div class="hero-text" style="color: #333; font-size: 2.5rem; font-weight: bold; text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="hero-text"
+             style="color: #333; font-size: 2.5rem; font-weight: bold; text-align: center;
+                    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
             {{ categoria }}
         </div>
     </div>
-    
+
+    <!-- Contenedor de productos -->
     <div class="container my-5">
         <div class="row text-center mt-4">
+
             {% for producto in productos %}
                 <div class="col-md-4 mb-4">
+
+                    <!-- Enlace al detalle del producto -->
                     <a href="{% url 'producto_detalle' producto.id %}" class="text-decoration-none">
+
                         <div class="card border-0">
+
                             {% if producto.imagen %}
-                                <img src="{{ producto.imagen.url }}" class="card-img-top producto-imagen mx-auto" alt="{{ producto.nombre_producto }}">
+                                <img src="{{ producto.imagen.url }}"
+                                     class="card-img-top producto-imagen mx-auto"
+                                     alt="{{ producto.nombre_producto }}">
                             {% else %}
-                                <img src="{% static 'images/placeholder.png' %}" class="card-img-top producto-imagen mx-auto" alt="Imagen no disponible">
+                                <img src="{% static 'images/placeholder.png' %}"
+                                     class="card-img-top producto-imagen mx-auto"
+                                     alt="Imagen no disponible">
                             {% endif %}
+
                             <div class="card-body">
                                 <h5 class="card-title text-dark">{{ producto.nombre_producto }}</h5>
                                 <p class="card-text">${{ producto.costo|floatformat:0 }}</p>
                             </div>
+
                         </div>
+
                     </a>
+
                 </div>
             {% empty %}
                 <p>No hay productos disponibles en la categoría {{ categoria }}.</p>
             {% endfor %}
+
         </div>
     </div>
+
 </main>
 {% endblock %}

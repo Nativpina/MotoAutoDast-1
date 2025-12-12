@@ -1,0 +1,9 @@
+<form id="webpay-form" action="{{ url_webpay }}" method="POST">
+    <input type="hidden" name="token_ws" value="{{ token }}">
+</form>
+
+<script>
+    document.getElementById("webpay-form").submit();
+</script>
+
+<p>Redirigiendo a Webpay...</p>

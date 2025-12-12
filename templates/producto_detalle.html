@@ -1,43 +1,58 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block content %}
 <main>
     <div class="container my-5">
         <div class="row">
-            <!-- Columna de Imagen del Producto -->
-            <div class="col-md-4 text-center">
+
+            <!-- Imagen del Producto SIN BORDE NI SOMBRA -->
+            <div class="col-md-5 text-center d-flex justify-content-center align-items-center">
                 {% if producto.imagen %}
-                    <img src="{{ producto.imagen.url }}" class="img-fluid" alt="{{ producto.nombre_producto }}">
+                    <img src="{{ producto.imagen.url }}"
+                         class="product-image"
+                         alt="{{ producto.nombre_producto }}">
                 {% else %}
-                    <img src="{% static 'images/placeholder.png' %}" class="img-fluid" alt="Imagen no disponible">
+                    <img src="{% static 'images/placeholder.png' %}"
+                         class="product-image"
+                         alt="Imagen no disponible">
                 {% endif %}
             </div>
 
-            <!-- Columna de Detalles del Producto -->
-            <div class="col-md-8">
+            <!-- Información del Producto -->
+            <div class="col-md-7">
                 <h2 class="fw-bold">{{ producto.nombre_producto }}</h2>
 
-                <!-- Mensaje dinámico de stock -->
+                <!-- Etiqueta de stock -->
                 {% if producto.stock == 0 %}
-                    <p class="text-danger fw-bold">SIN STOCK</p>
+                    <span class="stock-text stock-none">SIN STOCK</span>
                 {% elif producto.stock < 10 %}
-                    <p class="text-warning fw-bold">POCO STOCK</p>
+                    <span class="stock-text stock-low">POCO STOCK</span>
                 {% else %}
-                    <p class="text-success fw-bold">EN STOCK</p>
+                    <span class="stock-text stock-ok">EN STOCK</span>
                 {% endif %}
-                
-                <h3 class="text-dark mb-4">${{ producto.costo|floatformat:0 }}</h3>
+
+                <h3 class="price-text my-4">$ {{ producto.costo|intcomma }}</h3>
+
+                <!-- Agregar al carrito -->
                 <form method="post" action="{% url 'add_to_cart' producto.id %}">
                     {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-primary">Añadir al Carrito</button>
+                    <label for="cantidad" class="fw-bold">Cantidad:</label>
+                    <input type="number" name="cantidad" id="cantidad" value="1" min="1"
+                           class="form-control mb-3" style="width: 120px;">
+
+                    {% if producto.stock > 0 %}
+                        <button type="submit" class="btn btn-dark btn-lg">Añadir al Carrito</button>
+                    {% else %}
+                        <button type="button" class="btn btn-secondary btn-lg" disabled>Sin Stock</button>
+                    {% endif %}
                 </form>
-                
-                <h5 class="fw-bold">DESCRIPCIÓN:</h5>
+
+                <h5 class="fw-bold mt-4">DESCRIPCIÓN</h5>
                 <p>{{ producto.descripcion }}</p>
-                
-                <h5 class="fw-bold">ESPECIFICACIONES:</h5>
+
+                <h5 class="fw-bold">ESPECIFICACIONES</h5>
                 <ul>
                     <li><strong>Aplicación:</strong> Lubricantes para motor</li>
                     <li><strong>Tipo de Motor:</strong> 4 Tiempos</li>
@@ -47,6 +62,146 @@
                 </ul>
             </div>
         </div>
+
+        <!-- Recomendaciones -->
+        <hr class="my-5">
+        <h3 class="fw-bold mb-4">Recomendados para ti</h3>
+
+        <div id="recoCarousel" class="carousel slide position-relative">
+            <div class="carousel-inner" id="recoContainer"></div>
+
+            <!-- Flechas iguales al carrusel del inicio, más separadas -->
+            <button class="carousel-control-prev" type="button" data-bs-target="#recoCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon arrow-icon"></span>
+                <span class="visually-hidden">Anterior</span>
+            </button>
+
+            <button class="carousel-control-next" type="button" data-bs-target="#recoCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon arrow-icon"></span>
+                <span class="visually-hidden">Siguiente</span>
+            </button>
+        </div>
     </div>
 </main>
+
+<!-- --------------------- ESTILOS CSS --------------------- -->
+<style>
+/* Imagen sin cuadro */
+.product-image {
+    max-height: 350px;
+    width: auto;
+    object-fit: contain;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* Etiquetas de stock */
+.stock-text {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+.stock-none { color: #d9534f; }
+.stock-low { color: #f0ad4e; }
+.stock-ok { color: #5cb85c; }
+
+/* Precio */
+.price-text {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+/* Recomendaciones */
+.reco-card {
+    text-align: center;
+    padding: 10px;
+    border-radius: 10px;
+    transition: 0.2s;
+}
+.reco-card:hover { transform: translateY(-4px); }
+
+.reco-img {
+    width: 160px;
+    height: 160px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+/* Etiqueta Popular */
+.popular-label {
+    color: red;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+/* Flechas del carrusel (idénticas al inicio, más separadas) */
+.arrow-icon {
+    background-color: black !important;
+    border-radius: 50%;
+    width: 2.3rem !important;
+    height: 2.3rem !important;
+}
+
+.carousel-control-prev {
+    left: -60px !important;
+}
+
+.carousel-control-next {
+    right: -60px !important;
+}
+</style>
+
+<!-- --------------------- SCRIPT --------------------- -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const productoId = "{{ producto.id }}";
+    const container = document.getElementById("recoContainer");
+
+    fetch(`/api/recomendar/${productoId}/`)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.recomendaciones || data.recomendaciones.length === 0) {
+                container.innerHTML = `
+                    <div class="carousel-item active text-center">
+                        <p class="text-muted">No hay recomendaciones disponibles.</p>
+                    </div>`;
+                return;
+            }
+
+            let slide;
+
+            data.recomendaciones.forEach((prod, index) => {
+
+                if (index % 3 === 0) {
+                    slide = document.createElement("div");
+                    slide.classList.add("carousel-item");
+                    if (index === 0) slide.classList.add("active");
+
+                    const row = document.createElement("div");
+                    row.className = "row justify-content-center";
+                    slide.appendChild(row);
+                    container.appendChild(slide);
+                }
+
+                const col = document.createElement("div");
+                col.className = "col-md-4 mb-4";
+
+                col.innerHTML = `
+                    <div class="reco-card">
+                        <div class="popular-label">Popular</div>
+                        <img src="${prod.imagen_url}" class="reco-img">
+                        <h6 class="fw-bold">${prod.nombre}</h6>
+                        <p class="fw-bold">$${prod.costo.toLocaleString('es-CL')}</p>
+                        <a href="/producto/${prod.id}/" class="btn btn-dark btn-sm">Ver producto</a>
+                    </div>
+                `;
+
+                slide.querySelector(".row").appendChild(col);
+            });
+        });
+});
+</script>
+
 {% endblock %}

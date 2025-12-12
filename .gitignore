@@ -1,0 +1,25 @@
+# Entornos virtuales
+env/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Base de datos local
+db.sqlite3
+
+# Archivos media (uploads)
+media/
+
+# Archivos de IDE
+.vscode/
+.idea/
+
+# Archivos temporales
+*.log
+
+# Carpetas internas
+.ai/

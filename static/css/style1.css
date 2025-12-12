@@ -77,5 +77,24 @@ main {
     flex: 1;
 }
 
+/* --- Estilo para los mensajes de error en formularios --- */
+.text-danger {
+    font-weight: bold !important;
+}
 
+.btn-add-cart {
+    background-color: #000 !important;  /* Negro */
+    color: white !important;            /* Texto blanco */
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    font-weight: bold;
+    transition: 0.3s ease;
+    display: inline-block;
+}
 
+.btn-add-cart:hover {
+    background-color: #333 !important;  /* Negro más claro */
+    color: #fff !important;
+    transform: scale(1.03);
+}
