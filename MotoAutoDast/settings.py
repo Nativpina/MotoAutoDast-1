@@ -56,32 +56,11 @@ else:
 # Tiempo de cache que entregará WhiteNoise (en segundos). 1 año por defecto.
 WHITENOISE_MAX_AGE = 31536000
 
-# Permitir que WhiteNoise sirva todos los archivos estáticos, incluyendo imágenes
-WHITENOISE_AUTOREFRESH = DEBUG  # Auto-refresh en desarrollo
-WHITENOISE_USE_FINDERS = DEBUG  # Usar finders en desarrollo
-
-# Agregar tipos MIME para imágenes
-WHITENOISE_MIMETYPES = {
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.png': 'image/png',
-    '.gif': 'image/gif',
-    '.svg': 'image/svg+xml',
-    '.webp': 'image/webp',
-    '.ico': 'image/x-icon',
-}
-
 # ==========================================================
 # MEDIA LOCAL (NO AZURE)
 # ==========================================================
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-
-# En producción, servir media con WhiteNoise también
-if not DEBUG:
-    # Agregar MEDIA_ROOT a los directorios que WhiteNoise servirá
-    WHITENOISE_ROOT = MEDIA_ROOT
-    WHITENOISE_INDEX_FILE = False  # No servir index.html por defecto
 
 # ==========================================================
 # DJANGO CONFIG
@@ -113,8 +92,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Debe estar justo después de SecurityMiddleware
-    'MotoAutoDast.middleware.ServeMediaMiddleware',  # Servir archivos media en producción
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # <-- añadido aquí, justo después de SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
