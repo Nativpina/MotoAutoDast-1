@@ -7,7 +7,7 @@ name: Build and deploy Python app to Azure Web App - motoautodast
 on:
   push:
     branches:
-      - master
+      - main
   workflow_dispatch:
 
 jobs:
@@ -63,9 +63,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_13C55E630B694BDCBB2CA872D3DD19B6 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F7D0112547344881B18AEBD9425C258C }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_06AE6F8543AD45F29818994EFDDD7EA2 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_4077BB1BD89647AAAE15926F0754B6CA }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_252552F0145141D0BF82FBDD78D2C1FC }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_88D38DA09B914AD18F5D3176D156A3CC }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
