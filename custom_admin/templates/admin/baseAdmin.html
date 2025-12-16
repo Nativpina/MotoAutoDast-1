@@ -38,28 +38,29 @@
             <ul class="nav flex-column">
 
                 <li class="nav-item mb-2">
-                    <a href="{% url 'dashboard' %}" class="nav-link d-flex align-items-center">
+                    <a href="{% url 'admin:dashboard' %}" class="nav-link d-flex align-items-center">
                         <i class="fa-solid fa-house me-2" style="font-size: 1.5em; color: #ffffff;"></i>
                         <span>Inicio</span>
                     </a>
                 </li>
 
                 <li class="nav-item mb-2">
-                    <a href="{% url 'listar_productos' %}" class="nav-link d-flex align-items-center">
+                    <a href="{% url 'admin:listar_productos' %}" class="nav-link d-flex align-items-center">
                         <i class="fa-solid fa-box me-2" style="font-size: 1.5em; color: #ffffff;"></i>
                         <span>Productos</span>
                     </a>
                 </li>
 
                 <li class="nav-item mb-2">
-                    <a href="{% url 'pagos' %}" class="nav-link d-flex align-items-center">
+                    <a href="{% url 'admin:pagos' %}" class="nav-link d-flex align-items-center">
                         <i class="fa-solid fa-file-invoice-dollar me-2" style="font-size: 1.5em; color: #ffffff;"></i>
                         <span>Pagos</span>
                     </a>
                 </li>
 
                 <li class="nav-item mb-2">
-                    <a href="{% url 'ajustes' %}" class="nav-link d-flex align-items-center">
+                    {# <a href="{% url 'admin:ajustes' %}" class="nav-link d-flex align-items-center"> #}
+                    <a href="#" class="nav-link d-flex align-items-center disabled" onclick="return false;">
                         <i class="fa-solid fa-cogs me-2" style="font-size: 1.5em; color: #ffffff;"></i>
                         <span>Ajustes</span>
                     </a>
@@ -75,7 +76,7 @@
                 <span>Administrador</span>
             </div>
 
-            <form action="{% url 'admin_logout' %}" method="post" style="display: inline;">
+            <form action="{% url 'admin:logout' %}" method="post" style="display: inline;">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger w-100">Cerrar sesión</button>
             </form>
