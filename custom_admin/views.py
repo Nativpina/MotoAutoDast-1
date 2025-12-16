@@ -70,79 +70,97 @@ def admin_login(req):
 
 @login_required(login_url='/admin/')
 def dashboard(req):
-
-    # Solo superusuarios pueden entrar
-    if not req.user.is_superuser:
-        messages.warning(req, 'No tienes permisos para acceder al panel de administración.')
-        return redirect('/')
-
-    # ------------------- TARJETAS SUPERIORES -------------------
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
-        total_pedidos_pendientes = Compra.objects.filter(estado='pendiente').count()
-    except Exception:
-        total_pedidos_pendientes = 0
+        # Solo superusuarios pueden entrar
+        if not req.user.is_superuser:
+            messages.warning(req, 'No tienes permisos para acceder al panel de administración.')
+            return redirect('/')
 
-    try:
-        total_pedidos_enviados = Compra.objects.filter(estado='enviado').count()
-    except Exception:
-        total_pedidos_enviados = 0
+        # ------------------- TARJETAS SUPERIORES -------------------
+        try:
+            total_pedidos_pendientes = Compra.objects.filter(estado='pendiente').count()
+        except Exception:
+            total_pedidos_pendientes = 0
 
-    try:
-        total_ventas = Compra.objects.filter(
-            estado='enviado'
-        ).aggregate(total=Sum('monto'))['total'] or 0
-    except Exception:
-        total_ventas = 0
+        try:
+            total_pedidos_enviados = Compra.objects.filter(estado='enviado').count()
+        except Exception:
+            total_pedidos_enviados = 0
 
-    # ------------------- VISITAS POR MES -------------------
-    meses_labels = [
-        "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-        "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
-    ]
+        try:
+            total_ventas = Compra.objects.filter(
+                estado='enviado'
+            ).aggregate(total=Sum('monto'))['total'] or 0
+        except Exception:
+            total_ventas = 0
 
-    visitas_data = []
-    try:
-        visitas_data = [
-            Visita.objects.filter(fecha__month=i).count() for i in range(1, 13)
+        # ------------------- VISITAS POR MES -------------------
+        meses_labels = [
+            "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+            "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
         ]
-    except Exception:
-        visitas_data = [0] * 12
 
-    # ------------------- CATEGORÍAS MÁS VISTAS -------------------
-    categorias_labels = []
-    categorias_valores = []
+        visitas_data = []
+        try:
+            visitas_data = [
+                Visita.objects.filter(fecha__month=i).count() for i in range(1, 13)
+            ]
+        except Exception:
+            visitas_data = [0] * 12
 
-    try:
-        for categoria in Categoria.objects.all():
-            try:
-                visitas_categoria = Visita.objects.filter(
-                    producto__categoria=categoria
-                ).count()
-                categorias_labels.append(str(categoria.nombre_categoria))
-                categorias_valores.append(int(visitas_categoria))
-            except Exception:
-                continue
-    except Exception:
-        pass
+        # ------------------- CATEGORÍAS MÁS VISTAS -------------------
+        categorias_labels = []
+        categorias_valores = []
 
-    # Si no hay categorías, agregar valores por defecto para el gráfico
-    if not categorias_labels:
-        categorias_labels = ["Sin datos"]
-        categorias_valores = [0]
+        try:
+            for categoria in Categoria.objects.all():
+                try:
+                    visitas_categoria = Visita.objects.filter(
+                        producto__categoria=categoria
+                    ).count()
+                    categorias_labels.append(str(categoria.nombre_categoria))
+                    categorias_valores.append(int(visitas_categoria))
+                except Exception:
+                    continue
+        except Exception:
+            pass
 
-    # ------------------- CONTEXTO -------------------
-    context = {
-        "total_pedidos_pendientes": total_pedidos_pendientes,
-        "total_pedidos_enviados": total_pedidos_enviados,
-        "total_ventas": total_ventas,
-        "meses_labels": meses_labels,
-        "visitas_data": visitas_data,
-        "categorias_labels": categorias_labels,
-        "categorias_valores": categorias_valores,
-    }
+        # Si no hay categorías, agregar valores por defecto para el gráfico
+        if not categorias_labels:
+            categorias_labels = ["Sin datos"]
+            categorias_valores = [0]
 
-    return render(req, "admin/dashboard.html", context)
+        # ------------------- CONTEXTO -------------------
+        context = {
+            "total_pedidos_pendientes": total_pedidos_pendientes,
+            "total_pedidos_enviados": total_pedidos_enviados,
+            "total_ventas": total_ventas,
+            "meses_labels": meses_labels,
+            "visitas_data": visitas_data,
+            "categorias_labels": categorias_labels,
+            "categorias_valores": categorias_valores,
+        }
 
+        logger.info(f"Dashboard context: {context}")
+        return render(req, "admin/dashboard.html", context)
+        
+    except Exception as e:
+        logger.error(f"Error fatal en dashboard: {str(e)}", exc_info=True)
+        messages.error(req, f'Error al cargar el dashboard: {str(e)}')
+        # Renderizar una versión simple con el error
+        return render(req, "admin/dashboard.html", {
+            "total_pedidos_pendientes": 0,
+            "total_pedidos_enviados": 0,
+            "total_ventas": 0,
+            "meses_labels": ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"],
+            "visitas_data": [0] * 12,
+            "categorias_labels": ["Sin datos"],
+            "categorias_valores": [0],
+            "error": str(e)
+        })
 @login_required(login_url='/admin/')
 def pagos_view(request):
     if not request.user.is_superuser:
