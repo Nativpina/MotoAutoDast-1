@@ -57,11 +57,12 @@ def admin_login(req):
 
 
 
-@login_required
+@login_required(login_url='/admin/')
 def dashboard(req):
 
     # Solo superusuarios pueden entrar
     if not req.user.is_superuser:
+        messages.warning(req, 'No tienes permisos para acceder al panel de administración.')
         return redirect('/')
 
     try:
@@ -125,9 +126,10 @@ def dashboard(req):
         messages.error(req, 'Error al cargar el dashboard.')
         return redirect('/')
 
-@login_required
+@login_required(login_url='/admin/')
 def pagos_view(request):
     if not request.user.is_superuser:
+        messages.warning(request, 'No tienes permisos para acceder a esta sección.')
         return redirect('/')
     pagos = Compra.objects.select_related('cliente').order_by('-fecha_compra')
     return render(request, 'admin/pagos.html', {'pagos': pagos})
