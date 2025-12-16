@@ -46,8 +46,9 @@ DEBUG = os.environ.get("DEBUG", "False") == "True"
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 
+# Usar WhiteNoise sin Manifest para evitar errores 500 por archivos faltantes
 if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 else:
     # almacenamiento por defecto en DEV para evitar errores de manifest
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
