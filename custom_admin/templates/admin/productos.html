@@ -7,7 +7,7 @@
                 <!-- Iconos e Input -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <a href="{% url 'agregar_producto' %}" class="btn btn-danger me-2 tcolor">
+                        <a href="{% url 'admin:agregar_producto' %}" class="btn btn-danger me-2 tcolor">
                             <i class="fa-solid fa-plus"></i> Agregar
                         </a>
                     </div>
@@ -43,12 +43,12 @@
                                 <td>
                                     <div class="row gx-1">
                                         <div class="col-auto">
-                                            <a href="{% url 'editar_producto' producto.id %}" class="btn btn-sm btn-warning">
+                                            <a href="{% url 'admin:editar_producto' producto.id %}" class="btn btn-sm btn-warning">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </a>
                                         </div>
                                         <div class="col-auto">
-                                            <form action="{% url 'eliminar_producto' producto.id %}" method="post" style="display: inline;" onsubmit="return confirmDelete();">
+                                            <form action="{% url 'admin:eliminar_producto' producto.id %}" method="post" style="display: inline;" onsubmit="return confirmDelete();">
                                                 {% csrf_token %}
                                                 <button type="submit" class="btn btn-sm btn-danger">
                                                     <i class="fa-solid fa-trash"></i>
