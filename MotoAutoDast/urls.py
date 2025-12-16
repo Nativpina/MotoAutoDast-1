@@ -44,7 +44,7 @@ from MainApp.forms import CustomPasswordResetForm
 
 urlpatterns = [
 
-    path('admin/', include('custom_admin.urls', namespace='admin')),
+    path('admin/', include('custom_admin.urls')), # si no estaba, agrégalo
 
 
 

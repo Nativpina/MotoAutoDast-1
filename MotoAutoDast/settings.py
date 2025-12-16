@@ -46,15 +46,11 @@ DEBUG = os.environ.get("DEBUG", "False") == "True"
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 
-# Usar WhiteNoise sin Manifest para evitar errores 500 por archivos faltantes
-if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-else:
-    # almacenamiento por defecto en DEV para evitar errores de manifest
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+# Storage más simple y permisivo para evitar errores 500
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
-# Tiempo de cache que entregará WhiteNoise (en segundos). 1 año por defecto.
-WHITENOISE_MAX_AGE = 31536000
+# Tiempo de cache que entregará WhiteNoise (en segundos)
+WHITENOISE_MAX_AGE = 31536000 if not DEBUG else 0
 
 # ==========================================================
 # MEDIA LOCAL (NO AZURE)

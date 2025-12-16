@@ -10,13 +10,9 @@ __pycache__/
 
 # Base de datos local
 db.sqlite3
-*.sqlite3
 
 # Archivos media (uploads)
 media/
-
-# Static files
-staticfiles/
 
 # Archivos de IDE
 .vscode/
@@ -27,10 +23,3 @@ staticfiles/
 
 # Carpetas internas
 .ai/
-
-# Variables de entorno
-.env
-
-# Azure y secretos
-*.key
-*.pem
