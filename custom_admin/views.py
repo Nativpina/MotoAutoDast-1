@@ -13,46 +13,57 @@ from MainApp.models import Visita
 
 def admin_login(req):
     try:
+        # Verificar si ya está autenticado
         if req.user.is_authenticated:
             if req.user.is_superuser:
                 return redirect('/admin/dashboard/')
             else:
-                return redirect('/')  # Redirige a la página de inicio si no es superusuario
+                return redirect('/')
 
         if req.method == 'POST':
-            username = req.POST.get('username')
-            password = req.POST.get('password')
+            username = req.POST.get('username', '').strip()
+            password = req.POST.get('password', '')
 
-            # Verificar si el usuario existe
-            user_obj = User.objects.filter(username=username).first()
-            if not user_obj:
-                messages.info(req, 'Cuenta no encontrada')
-                return HttpResponseRedirect(req.META.get('HTTP_REFERER'))
+            if not username or not password:
+                messages.warning(req, 'Por favor ingrese usuario y contraseña')
+                return render(req, 'admin/Adminlogin.html')
+
+            try:
+                # Verificar si el usuario existe
+                user_obj = User.objects.filter(username=username).first()
+                if not user_obj:
+                    messages.warning(req, 'Usuario no encontrado')
+                    return render(req, 'admin/Adminlogin.html')
+            except Exception as db_error:
+                # Error de base de datos - probablemente tablas no migradas
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error BD en admin_login: {str(db_error)}", exc_info=True)
+                messages.error(req, 'Error de base de datos. Contacte al administrador.')
+                return render(req, 'admin/Adminlogin.html')
             
             # Autenticar al usuario
             user_obj = authenticate(username=username, password=password)
 
             if user_obj:
                 if user_obj.is_superuser:
-                    # Iniciar sesión y redirigir al dashboard si es superusuario
                     login(req, user_obj)
                     return redirect('/admin/dashboard/')
                 else:
-                    # Redirige a la página de inicio si el usuario no es superusuario
-                    messages.info(req, 'No tienes permiso para acceder a esta sección')
-                    return redirect('/')
+                    messages.warning(req, 'No tienes permisos de administrador')
+                    return render(req, 'admin/Adminlogin.html')
             else:
-                messages.info(req, 'Contraseña Incorrecta')
-                return HttpResponseRedirect(req.META.get('HTTP_REFERER'))
+                messages.error(req, 'Contraseña incorrecta')
+                return render(req, 'admin/Adminlogin.html')
 
         return render(req, 'admin/Adminlogin.html')
     
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
-        logger.error(f"Error en admin_login: {str(e)}", exc_info=True)
-        messages.error(req, 'Error en el inicio de sesión. Intente nuevamente.')
-        return redirect('/')
+        logger.error(f"Error general en admin_login: {str(e)}", exc_info=True)
+        messages.error(req, f'Error: {str(e)}')
+        return render(req, 'admin/Adminlogin.html')
 
 
 

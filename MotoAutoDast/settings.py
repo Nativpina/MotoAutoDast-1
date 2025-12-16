@@ -15,14 +15,17 @@ AZURE_STATIC_CONTAINER = os.environ.get("AZURE_CONTAINER", "static")
 # STATIC URL local. Esta es la URL de acceso que se usará.
 STATIC_URL = '/static/'
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://motoautodast-dzgvgmfvcaddgzbs.chilecentral-01.azurewebsites.net",
-]
+# Leer CSRF_TRUSTED_ORIGINS de variable de entorno
+csrf_origins_str = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+if csrf_origins_str:
+    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins_str.split(",")]
+else:
+    CSRF_TRUSTED_ORIGINS = [
+        "https://motoautodast-dzgvgmfvcaddgzbs.chilecentral-01.azurewebsites.net",
+    ]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
-
-CSRF_COOKIE_SECURE = True
 
 # Carpeta local que collectstatic llenará (es correcta)
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
@@ -38,6 +41,10 @@ else:
 # En desarrollo evitamos los problemas del manifest storage estableciendo
 # el storage por defecto cuando DEBUG=True.
 DEBUG = os.environ.get("DEBUG", "False") == "True"
+
+# Configurar cookies seguras solo en producción
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
 
 if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -61,7 +68,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
-ALLOWED_HOSTS = ["*"]
+
+# Leer ALLOWED_HOSTS de variable de entorno (puede ser string con comas)
+allowed_hosts_str = os.environ.get("ALLOWED_HOSTS", "*")
+if allowed_hosts_str == "*":
+    ALLOWED_HOSTS = ["*"]
+else:
+    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(",")]
 
 INSTALLED_APPS = [
     'custom_admin',
