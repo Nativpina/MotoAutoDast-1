@@ -3,10 +3,12 @@ from .views import dashboard, admin_login, pagos_view
 from django.contrib.auth.views import LogoutView
 from MainApp.views import listar_productos, agregar_producto, editar_producto, eliminar_producto
 
+app_name = 'admin'
+
 urlpatterns = [
-    path('', admin_login, name="admin_login"),
+    path('', admin_login, name="login"),
     path('dashboard/', dashboard, name='dashboard'),
-    path('logout/', LogoutView.as_view(), name='admin_logout'),
+    path('logout/', LogoutView.as_view(), name='logout'),
 
     path('productos/', listar_productos, name='listar_productos'),
     path('productos/agregar/', agregar_producto, name='agregar_producto'),
