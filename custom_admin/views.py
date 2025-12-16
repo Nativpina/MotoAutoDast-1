@@ -65,66 +65,72 @@ def dashboard(req):
         messages.warning(req, 'No tienes permisos para acceder al panel de administración.')
         return redirect('/')
 
+    # ------------------- TARJETAS SUPERIORES -------------------
     try:
-        # ------------------- TARJETAS SUPERIORES -------------------
-
-        # Pedidos Pendientes
         total_pedidos_pendientes = Compra.objects.filter(estado='pendiente').count()
+    except Exception:
+        total_pedidos_pendientes = 0
 
-        # Pedidos Enviados
+    try:
         total_pedidos_enviados = Compra.objects.filter(estado='enviado').count()
+    except Exception:
+        total_pedidos_enviados = 0
 
-        # Ventas Totales
+    try:
         total_ventas = Compra.objects.filter(
             estado='enviado'
-        ).aggregate(
-            total=Sum('monto')
-        )['total'] or 0
+        ).aggregate(total=Sum('monto'))['total'] or 0
+    except Exception:
+        total_ventas = 0
 
-        # ------------------- VISITAS POR MES -------------------
+    # ------------------- VISITAS POR MES -------------------
+    meses_labels = [
+        "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+        "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+    ]
 
-        meses_labels = [
-            "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-            "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
-        ]
-
+    visitas_data = []
+    try:
         visitas_data = [
             Visita.objects.filter(fecha__month=i).count() for i in range(1, 13)
         ]
+    except Exception:
+        visitas_data = [0] * 12
 
-        # ------------------- CATEGORÍAS MÁS VISTAS -------------------
+    # ------------------- CATEGORÍAS MÁS VISTAS -------------------
+    categorias_labels = []
+    categorias_valores = []
 
-        categorias_labels = []
-        categorias_valores = []
-
+    try:
         for categoria in Categoria.objects.all():
-            visitas_categoria = Visita.objects.filter(
-                producto__categoria=categoria
-            ).count()
+            try:
+                visitas_categoria = Visita.objects.filter(
+                    producto__categoria=categoria
+                ).count()
+                categorias_labels.append(str(categoria.nombre_categoria))
+                categorias_valores.append(int(visitas_categoria))
+            except Exception:
+                continue
+    except Exception:
+        pass
 
-            categorias_labels.append(str(categoria.nombre_categoria))
-            categorias_valores.append(int(visitas_categoria))
+    # Si no hay categorías, agregar valores por defecto para el gráfico
+    if not categorias_labels:
+        categorias_labels = ["Sin datos"]
+        categorias_valores = [0]
 
-        # ------------------- CONTEXTO -------------------
+    # ------------------- CONTEXTO -------------------
+    context = {
+        "total_pedidos_pendientes": total_pedidos_pendientes,
+        "total_pedidos_enviados": total_pedidos_enviados,
+        "total_ventas": total_ventas,
+        "meses_labels": meses_labels,
+        "visitas_data": visitas_data,
+        "categorias_labels": categorias_labels,
+        "categorias_valores": categorias_valores,
+    }
 
-        context = {
-            "total_pedidos_pendientes": total_pedidos_pendientes,
-            "total_pedidos_enviados": total_pedidos_enviados,
-            "total_ventas": total_ventas,
-            "meses_labels": meses_labels,
-            "visitas_data": visitas_data,
-            "categorias_labels": categorias_labels,
-            "categorias_valores": categorias_valores,
-        }
-
-        return render(req, "admin/dashboard.html", context)
-    
-    except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Error en dashboard: {str(e)}", exc_info=True)
-        messages.error(req, 'Error al cargar el dashboard.')
-        return redirect('/')
+    return render(req, "admin/dashboard.html", context)
 
 @login_required(login_url='/admin/')
 def pagos_view(request):
