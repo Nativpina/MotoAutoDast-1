@@ -1,11 +1,11 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
-from MainApp.models import Compra, Cliente, Producto, Categoria, Bodega, ProductoCompra, Visita
-from django.db.models import Sum, Count, F
+from MainApp.models import Compra, Cliente, Producto, Categoria, Bodega, ProductoCompra, Visita, EntregaDomicilio, HistorialCambios
+from django.db.models import Sum, Count, F, Q
 from django.utils import timezone
 from datetime import timedelta
 
@@ -63,12 +63,12 @@ def dashboard(req):
     # Pedidos Pendientes
     total_pedidos_pendientes = Compra.objects.filter(estado='pendiente').count()
 
-    # Pedidos Enviados
-    total_pedidos_enviados = Compra.objects.filter(estado='enviado').count()
+    # Pedidos Enviados/Entregados
+    total_pedidos_enviados = Compra.objects.filter(estado__in=['enviado', 'entregado']).count()
 
-    # Ventas Totales
-    total_ventas = Compra.objects.filter(
-        estado='enviado'
+    # Ventas Totales (todas las compras excepto canceladas)
+    total_ventas = Compra.objects.exclude(
+        estado='cancelado'
     ).aggregate(
         total=Sum('monto')
     )['total'] or 0
@@ -77,23 +77,23 @@ def dashboard(req):
     hoy = timezone.now().date()
     hace_30_dias = hoy - timedelta(days=29)  # Cambiado a 29 para incluir hoy
     
-    # Obtener ventas por día
+    # Obtener ventas por día (incluyendo todas las compras de usuarios)
     ventas_por_dia = []
     dias_labels = []
     
     for i in range(30):
         dia = hace_30_dias + timedelta(days=i)
+        # Incluir compras completadas, no solo 'enviado'
         total_dia = Compra.objects.filter(
-            fecha_compra=dia,
-            estado='enviado'
-        ).aggregate(total=Sum('monto'))['total'] or 0
+            fecha_compra=dia
+        ).exclude(estado='cancelado').aggregate(total=Sum('monto'))['total'] or 0
         
         ventas_por_dia.append(float(total_dia))
         dias_labels.append(dia.strftime('%d/%m'))
 
     # ------------------- VENTAS POR CATEGORÍA (TOP 5 en CLP) -------------------
     ventas_categoria = ProductoCompra.objects.filter(
-        compra__estado='enviado'
+        compra__estado__in=['pendiente', 'en_camino', 'entregado', 'enviado']
     ).values(
         'producto__categoria__nombre_categoria'
     ).annotate(
@@ -119,12 +119,48 @@ def dashboard(req):
 
 @login_required
 def pagos_view(request):
+    """Vista de ventas/pagos con filtros integrados"""
     if not request.user.is_superuser:
         return redirect('/')
     
-    pagos = Compra.objects.select_related('cliente').order_by('-fecha_compra')
+    compras = Compra.objects.all().select_related('cliente').order_by('-fecha_compra')
     
-    return render(request, 'admin/pagos.html', {'pagos': pagos})
+    # Filtros
+    estado = request.GET.get('estado', '')
+    tipo_entrega = request.GET.get('tipo_entrega', '')
+    fecha_desde = request.GET.get('fecha_desde', '')
+    fecha_hasta = request.GET.get('fecha_hasta', '')
+    busqueda_cliente = request.GET.get('cliente', '')
+    
+    if estado:
+        compras = compras.filter(estado=estado)
+    
+    if tipo_entrega:
+        compras = compras.filter(tipo_entrega=tipo_entrega)
+    
+    if fecha_desde:
+        compras = compras.filter(fecha_compra__gte=fecha_desde)
+    
+    if fecha_hasta:
+        compras = compras.filter(fecha_compra__lte=fecha_hasta)
+    
+    if busqueda_cliente:
+        compras = compras.filter(
+            Q(cliente__nombre_cliente__icontains=busqueda_cliente) | 
+            Q(cliente__email__icontains=busqueda_cliente)
+        )
+    
+    context = {
+        'pagos': compras,
+        'compras': compras,
+        'filtro_estado': estado,
+        'filtro_tipo_entrega': tipo_entrega,
+        'filtro_fecha_desde': fecha_desde,
+        'filtro_fecha_hasta': fecha_hasta,
+        'filtro_cliente': busqueda_cliente,
+    }
+    
+    return render(request, 'admin/pagos.html', context)
 
 
 @login_required
@@ -237,3 +273,207 @@ def venta_manual_view(request):
 
 def ajustes(request):
     return render(request, 'admin/ajustes.html')
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from django.db.models import Q
+from MainApp.models import Compra, ProductoCompra, HistorialAdmin
+
+
+@login_required
+def pagos_detalle_view(request):
+    """Vista mejorada de pagos con filtros"""
+    if not request.user.is_superuser:
+        return redirect('/')
+    
+    compras = Compra.objects.all().select_related('cliente').order_by('-fecha_compra')
+    
+    # Filtros
+    estado = request.GET.get('estado', '')
+    tipo_entrega = request.GET.get('tipo_entrega', '')
+    fecha_desde = request.GET.get('fecha_desde', '')
+    fecha_hasta = request.GET.get('fecha_hasta', '')
+    busqueda_cliente = request.GET.get('cliente', '')
+    
+    if estado:
+        compras = compras.filter(estado=estado)
+    
+    if tipo_entrega:
+        compras = compras.filter(tipo_entrega=tipo_entrega)
+    
+    if fecha_desde:
+        compras = compras.filter(fecha_compra__gte=fecha_desde)
+    
+    if fecha_hasta:
+        compras = compras.filter(fecha_compra__lte=fecha_hasta)
+    
+    if busqueda_cliente:
+        compras = compras.filter(
+            Q(cliente__nombre_cliente__icontains=busqueda_cliente) | 
+            Q(cliente__email__icontains=busqueda_cliente)
+        )
+    
+    context = {
+        'compras': compras,
+        'filtro_estado': estado,
+        'filtro_tipo_entrega': tipo_entrega,
+        'filtro_fecha_desde': fecha_desde,
+        'filtro_fecha_hasta': fecha_hasta,
+        'filtro_cliente': busqueda_cliente,
+    }
+    
+    return render(request, 'admin/pagos_detalle.html', context)
+
+
+@login_required
+def entregas_pendientes_view(request):
+    """Vista para gestión de entregas a domicilio"""
+    if not request.user.is_superuser:
+        return redirect('/')
+    
+    # Separar entregas por estado
+    entregas_pendientes = Compra.objects.filter(
+        tipo_entrega='envio',
+        estado='pendiente'
+    ).select_related('cliente').order_by('fecha_compra')
+    
+    entregas_en_camino = Compra.objects.filter(
+        tipo_entrega='envio',
+        estado='en_camino'
+    ).select_related('cliente').order_by('fecha_compra')
+    
+    entregas_no_entregadas = Compra.objects.filter(
+        tipo_entrega='envio',
+        estado='no_entregado'
+    ).select_related('cliente').order_by('fecha_compra')
+    
+    context = {
+        'entregas_pendientes': entregas_pendientes,
+        'entregas_en_camino': entregas_en_camino,
+        'entregas_no_entregadas': entregas_no_entregadas,
+        'pendientes_count': entregas_pendientes.count(),
+        'en_camino_count': entregas_en_camino.count(),
+        'no_entregados_count': entregas_no_entregadas.count(),
+    }
+    
+    return render(request, 'admin/entregas_pendientes.html', context)
+
+
+@login_required
+def iniciar_entrega(request, entrega_id):
+    """Marca el inicio del recorrido de entrega"""
+    if not request.user.is_superuser:
+        return redirect('admin:entregas_pendientes')
+    
+    compra = get_object_or_404(Compra, id=entrega_id)
+    
+    if not compra.delivery_iniciado:
+        compra.delivery_iniciado = timezone.now()
+        compra.estado = 'en_camino'
+        compra.save()
+        
+        # Registrar en historial
+        HistorialCambios.objects.create(
+            usuario=request.user,
+            accion='Inicio de entrega',
+            detalle=f'Pedido #{compra.id} - Cliente: {compra.cliente.nombre_cliente}',
+            tipo='entrega'
+        )
+        
+        messages.success(request, f'Entrega iniciada para pedido #{compra.id}')
+    else:
+        messages.info(request, 'Esta entrega ya fue iniciada.')
+    
+    return redirect('admin:entregas_pendientes')
+
+
+@login_required
+def finalizar_entrega(request, entrega_id):
+    """Finaliza la entrega y registra el resultado"""
+    if not request.user.is_superuser:
+        return redirect('/')
+    
+    compra = get_object_or_404(Compra, id=entrega_id)
+    
+    if request.method == 'POST':
+        fue_entregado = request.POST.get('entregado') == 'si'
+        
+        compra.delivery_finalizado = timezone.now()
+        compra.intentos_entrega += 1
+        
+        if fue_entregado:
+            compra.estado = 'entregado'
+            
+            # Registrar en historial
+            HistorialCambios.objects.create(
+                usuario=request.user,
+                accion='Entrega completada',
+                detalle=f'Pedido #{compra.id} entregado exitosamente',
+                tipo='entrega'
+            )
+            
+            messages.success(request, f'Entrega completada para pedido #{compra.id}')
+        else:
+            motivo = request.POST.get('motivo_no_entrega', '')
+            reintentar = request.POST.get('reintentar') == 'si'
+            
+            compra.motivo_no_entrega = motivo
+            
+            if reintentar:
+                compra.estado = 'no_entregado'
+                compra.delivery_iniciado = None  # Resetear para permitir nuevo intento
+            else:
+                compra.estado = 'cancelado'
+            
+            # Registrar en historial
+            HistorialCambios.objects.create(
+                usuario=request.user,
+                accion='Entrega fallida',
+                detalle=f'Pedido #{compra.id} no entregado. Motivo: {motivo}. Reintentar: {"Sí" if reintentar else "No"}',
+                tipo='entrega'
+            )
+            
+            messages.warning(request, f'Pedido #{compra.id} marcado como no entregado')
+        
+        compra.save()
+    
+    return redirect('admin:entregas_pendientes')
+
+
+@login_required
+def historial_cambios_view(request):
+    """Vista para el historial de cambios administrativos"""
+    if not request.user.is_superuser:
+        return redirect('/')
+    
+    cambios = HistorialCambios.objects.all().select_related('usuario')
+    
+    # Filtros
+    tipo = request.GET.get('tipo', '')
+    fecha_desde = request.GET.get('fecha_desde', '')
+    fecha_hasta = request.GET.get('fecha_hasta', '')
+    usuario_filtro = request.GET.get('usuario', '')
+    
+    if tipo:
+        cambios = cambios.filter(tipo=tipo)
+    
+    if fecha_desde:
+        cambios = cambios.filter(fecha__gte=fecha_desde)
+    
+    if fecha_hasta:
+        cambios = cambios.filter(fecha__lte=fecha_hasta)
+    
+    if usuario_filtro:
+        cambios = cambios.filter(usuario__username__icontains=usuario_filtro)
+    
+    context = {
+        'cambios': cambios[:100],  # Limitar a 100 registros mÃ¡s recientes
+        'filtro_tipo': tipo,
+        'filtro_fecha_desde': fecha_desde,
+        'filtro_fecha_hasta': fecha_hasta,
+        'filtro_usuario': usuario_filtro,
+    }
+    
+    return render(request, 'admin/historial_cambios.html', context)

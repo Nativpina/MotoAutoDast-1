@@ -93,12 +93,20 @@
                     <div>
                         {% if p.estado == "pendiente" %}
                             <span class="status-badge status-pending">Pendiente</span>
+                        {% elif p.estado == "en_camino" %}
+                            <span class="status-badge status-sent">En camino</span>
+                        {% elif p.estado == "entregado" %}
+                            <span class="status-badge status-done">Entregado</span>
                         {% elif p.estado == "enviado" %}
                             <span class="status-badge status-sent">Enviado</span>
                         {% elif p.estado == "completado" %}
                             <span class="status-badge status-done">Completado</span>
-                        {% else %}
+                        {% elif p.estado == "no_entregado" %}
+                            <span class="status-badge status-cancel">No entregado</span>
+                        {% elif p.estado == "cancelado" %}
                             <span class="status-badge status-cancel">Cancelado</span>
+                        {% else %}
+                            <span class="status-badge status-cancel">{{ p.estado }}</span>
                         {% endif %}
                     </div>
                 </div>

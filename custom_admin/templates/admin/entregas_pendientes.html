@@ -1,0 +1,336 @@
+{% extends 'admin/baseAdmin.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2 class="text-white mb-4">
+        <i class="fa-solid fa-truck"></i> Gestión de Entregas a Domicilio
+    </h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Estadísticas rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5>Pendientes</h5>
+                    <h2>{{ pendientes_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>En Camino</h5>
+                    <h2>{{ en_camino_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5>No Entregados</h5>
+                    <h2>{{ no_entregados_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLA 1: PEDIDOS PENDIENTES -->
+    <div class="card bg-white mb-4">
+        <div class="card-body">
+            <h5 class="card-title"><i class="fa-solid fa-clock text-warning"></i> Pedidos Pendientes</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-warning">
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Dirección</th>
+                            <th>Fecha Pedido</th>
+                            <th>Monto</th>
+                            <th>Intentos</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entrega in entregas_pendientes %}
+                        <tr>
+                            <td>#{{ entrega.id }}</td>
+                            <td>
+                                <strong>{{ entrega.cliente.nombre_cliente }}</strong><br>
+                                <small>{{ entrega.cliente.email }}</small>
+                            </td>
+                            <td>{{ entrega.direccion_envio }}</td>
+                            <td>{{ entrega.fecha_compra|date:"d/m/Y" }}</td>
+                            <td class="fw-bold">${{ entrega.monto|floatformat:0 }}</td>
+                            <td class="text-center">{{ entrega.intentos_entrega }}</td>
+                            <td>
+                                <a href="{% url 'admin:iniciar_entrega' entrega.id %}" class="btn btn-sm btn-success" onclick="return confirm('¿Iniciar delivery para este pedido?')">
+                                    <i class="fa-solid fa-play"></i> Iniciar
+                                </a>
+                                <a href="{% url 'pedido_detalle' entrega.id %}" class="btn btn-sm btn-info" target="_blank">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No hay pedidos pendientes</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLA 2: PEDIDOS EN CAMINO -->
+    <div class="card bg-white mb-4">
+        <div class="card-body">
+            <h5 class="card-title"><i class="fa-solid fa-truck-fast text-primary"></i> Pedidos en Camino</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Dirección</th>
+                            <th>Fecha Pedido</th>
+                            <th>Monto</th>
+                            <th>Inicio Delivery</th>
+                            <th>Intentos</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entrega in entregas_en_camino %}
+                        <tr>
+                            <td>#{{ entrega.id }}</td>
+                            <td>
+                                <strong>{{ entrega.cliente.nombre_cliente }}</strong><br>
+                                <small>{{ entrega.cliente.email }}</small>
+                            </td>
+                            <td>{{ entrega.direccion_envio }}</td>
+                            <td>{{ entrega.fecha_compra|date:"d/m/Y" }}</td>
+                            <td class="fw-bold">${{ entrega.monto|floatformat:0 }}</td>
+                            <td><small>{{ entrega.delivery_iniciado|date:"d/m H:i" }}</small></td>
+                            <td class="text-center">{{ entrega.intentos_entrega }}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="abrirModalFinalizar({{ entrega.id }})">
+                                    <i class="fa-solid fa-stop"></i> Finalizar
+                                </button>
+                                <a href="{% url 'pedido_detalle' entrega.id %}" class="btn btn-sm btn-info" target="_blank">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">No hay pedidos en camino</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLA 3: PEDIDOS NO ENTREGADOS -->
+    <div class="card bg-white mb-4">
+        <div class="card-body">
+            <h5 class="card-title"><i class="fa-solid fa-triangle-exclamation text-danger"></i> Pedidos No Entregados</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-danger">
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Dirección</th>
+                            <th>Fecha Pedido</th>
+                            <th>Monto</th>
+                            <th>Intentos</th>
+                            <th>Motivo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entrega in entregas_no_entregadas %}
+                        <tr>
+                            <td>#{{ entrega.id }}</td>
+                            <td>
+                                <strong>{{ entrega.cliente.nombre_cliente }}</strong><br>
+                                <small>{{ entrega.cliente.email }}</small>
+                            </td>
+                            <td>{{ entrega.direccion_envio }}</td>
+                            <td>{{ entrega.fecha_compra|date:"d/m/Y" }}</td>
+                            <td class="fw-bold">${{ entrega.monto|floatformat:0 }}</td>
+                            <td class="text-center">{{ entrega.intentos_entrega }}</td>
+                            <td><small class="text-danger">{{ entrega.motivo_no_entrega|default:"Sin motivo" }}</small></td>
+                            <td>
+                                <a href="{% url 'admin:iniciar_entrega' entrega.id %}" class="btn btn-sm btn-warning" onclick="return confirm('¿Reintentar entrega para este pedido?')">
+                                    <i class="fa-solid fa-rotate"></i> Reintentar
+                                </a>
+                                <a href="{% url 'pedido_detalle' entrega.id %}" class="btn btn-sm btn-info" target="_blank">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">No hay pedidos no entregados</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales para finalizar entregas (fuera del container-fluid) -->
+{% for entrega in entregas_en_camino %}
+<div class="modal fade" id="finalizarModal{{ entrega.id }}" tabindex="-1" aria-labelledby="modalLabel{{ entrega.id }}" aria-hidden="true" style="z-index: 9999;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'admin:finalizar_entrega' entrega.id %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel{{ entrega.id }}">Finalizar Delivery #{{ entrega.id }}</h5>
+                    <button type="button" class="btn-close" onclick="cerrarModalFinalizar({{ entrega.id }})" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">¿El producto fue entregado?</label>
+                        <select name="entregado" class="form-select" required onchange="toggleMotivo(this, '{{ entrega.id }}')">
+                            <option value="">Seleccione...</option>
+                            <option value="si">Sí, fue entregado</option>
+                            <option value="no">No, no pudo ser entregado</option>
+                        </select>
+                    </div>
+                    
+                    <div id="motivoContainer{{ entrega.id }}" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Motivo de no entrega</label>
+                            <textarea name="motivo_no_entrega" class="form-control" rows="3" placeholder="Ej: Cliente no se encontraba en domicilio..."></textarea>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" name="reintentar" class="form-check-input" id="reintentar{{ entrega.id }}" value="si">
+                            <label class="form-check-label" for="reintentar{{ entrega.id }}">
+                                Reintentar entrega
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalFinalizar({{ entrega.id }})">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+function toggleMotivo(select, id) {
+    const container = document.getElementById('motivoContainer' + id);
+    if (select.value === 'no') {
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+function abrirModalFinalizar(entregaId) {
+    const modalId = 'finalizarModal' + entregaId;
+    const modalElement = document.getElementById(modalId);
+    
+    console.log('Intentando abrir modal:', modalId);
+    console.log('Elemento encontrado:', modalElement);
+    
+    if (modalElement) {
+        // Manipular clases directamente para mostrar el modal
+        modalElement.classList.add('show');
+        modalElement.style.display = 'block';
+        modalElement.setAttribute('aria-modal', 'true');
+        modalElement.removeAttribute('aria-hidden');
+        
+        // Crear backdrop
+        const backdrop = document.createElement('div');
+        backdrop.className = 'modal-backdrop fade show';
+        backdrop.id = 'backdrop' + entregaId;
+        document.body.appendChild(backdrop);
+        
+        // Agregar clase al body
+        document.body.classList.add('modal-open');
+        document.body.style.overflow = 'hidden';
+        document.body.style.paddingRight = '0px';
+        
+        console.log('Modal abierto exitosamente');
+    } else {
+        console.error('Modal no encontrado:', modalId);
+        alert('Error: No se pudo abrir el modal de finalización');
+    }
+}
+
+function cerrarModalFinalizar(entregaId) {
+    const modalId = 'finalizarModal' + entregaId;
+    const modalElement = document.getElementById(modalId);
+    const backdrop = document.getElementById('backdrop' + entregaId);
+    
+    if (modalElement) {
+        modalElement.classList.remove('show');
+        modalElement.style.display = 'none';
+        modalElement.setAttribute('aria-hidden', 'true');
+        modalElement.removeAttribute('aria-modal');
+    }
+    
+    if (backdrop) {
+        backdrop.remove();
+    }
+    
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+}
+
+// Debug: Verificar que Bootstrap está cargado
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Bootstrap version:', typeof bootstrap !== 'undefined' ? 'Loaded' : 'NOT LOADED');
+    
+    // Listar todos los modales disponibles
+    const modals = document.querySelectorAll('.modal');
+    console.log('Total modals found:', modals.length);
+    modals.forEach(modal => {
+        console.log('Modal ID:', modal.id);
+        
+        // Agregar event listener para cerrar al hacer clic fuera
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                const modalId = modal.id.replace('finalizarModal', '');
+                cerrarModalFinalizar(parseInt(modalId));
+            }
+        });
+    });
+    
+    // Cerrar modales con tecla ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const openModal = document.querySelector('.modal.show');
+            if (openModal) {
+                const modalId = openModal.id.replace('finalizarModal', '');
+                cerrarModalFinalizar(parseInt(modalId));
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

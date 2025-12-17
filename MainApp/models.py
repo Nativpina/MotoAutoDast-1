@@ -51,8 +51,10 @@ class Compra(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     ESTADOS = [
         ('pendiente', 'Pendiente'),
-        ('enviado', 'Enviado'),
+        ('en_camino', 'En camino'),
+        ('entregado', 'Entregado'),
         ('cancelado', 'Cancelado'),
+        ('no_entregado', 'No entregado'),
     ]
     estado = models.CharField(max_length=20, choices=ESTADOS, default='pendiente')
     monto = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -61,6 +63,14 @@ class Compra(models.Model):
         ("envio", "Envío a domicilio"),
     ]
     tipo_entrega = models.CharField(max_length=20, choices=TIPO_ENTREGA, default="envio")
+    
+    # Campos para gestión de entregas
+    delivery_iniciado = models.DateTimeField(null=True, blank=True)
+    delivery_finalizado = models.DateTimeField(null=True, blank=True)
+    intentos_entrega = models.IntegerField(default=0)
+    motivo_no_entrega = models.TextField(blank=True, null=True)
+    confirmado_por_cliente = models.BooleanField(default=False)
+    fecha_confirmacion_cliente = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Compra {self.id} - Cliente: {self.cliente.nombre_cliente}"
@@ -145,4 +155,67 @@ class Visita(models.Model):
 
     def __str__(self):
         return f"Visita a {self.producto} en {self.fecha}"
+
+
+class EntregaDomicilio(models.Model):
+    compra = models.OneToOneField(Compra, on_delete=models.CASCADE, related_name='entrega_domicilio')
+    inicio_recorrido = models.DateTimeField(null=True, blank=True)
+    fin_recorrido = models.DateTimeField(null=True, blank=True)
+    intentos_entrega = models.IntegerField(default=0)
+    entregado = models.BooleanField(default=False)
+    motivo_no_entrega = models.TextField(blank=True, null=True)
     
+    def __str__(self):
+        return f"Entrega de Pedido #{self.compra.id} - {self.compra.cliente.nombre_cliente}"
+
+
+class HistorialCambios(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    accion = models.CharField(max_length=255)
+    detalle = models.TextField()
+    TIPOS = [
+        ('producto', 'Producto'),
+        ('venta', 'Venta'),
+        ('entrega', 'Entrega'),
+        ('eliminacion', 'Eliminación'),
+        ('categoria', 'Categoría'),
+        ('bodega', 'Bodega'),
+        ('otro', 'Otro'),
+    ]
+    tipo = models.CharField(max_length=20, choices=TIPOS, default='otro')
+    
+    class Meta:
+        ordering = ['-fecha']
+    
+    def __str__(self):
+        return f"{self.fecha.strftime('%Y-%m-%d %H:%M')} - {self.usuario.username if self.usuario else 'Usuario eliminado'} - {self.accion}"
+
+
+class HistorialAdmin(models.Model):
+    ACCIONES = [
+        ('crear', 'Crear'),
+        ('editar', 'Editar'),
+        ('eliminar', 'Eliminar'),
+        ('venta_manual', 'Venta Manual'),
+        ('inicio_delivery', 'Inicio Delivery'),
+        ('fin_delivery', 'Fin Delivery'),
+        ('cambio_estado', 'Cambio Estado'),
+    ]
+    
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    accion = models.CharField(max_length=50, choices=ACCIONES)
+    modelo = models.CharField(max_length=100)  # Ej: "Producto", "Compra", etc
+    objeto_id = models.IntegerField(null=True, blank=True)
+    descripcion = models.TextField()
+    fecha = models.DateTimeField(auto_now_add=True)
+    datos_anteriores = models.JSONField(null=True, blank=True)
+    datos_nuevos = models.JSONField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-fecha']
+        verbose_name = 'Historial de Administración'
+        verbose_name_plural = 'Historiales de Administración'
+    
+    def __str__(self):
+        return f"{self.usuario.username} - {self.accion} - {self.modelo} ({self.fecha.strftime('%Y-%m-%d %H:%M')})"

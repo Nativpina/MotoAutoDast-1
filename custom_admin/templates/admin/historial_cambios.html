@@ -1,0 +1,108 @@
+{% extends 'admin/baseAdmin.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2 class="text-white mb-4">
+        <i class="fa-solid fa-history"></i> Historial de Cambios Administrativos
+    </h2>
+
+    <!-- Filtros -->
+    <div class="card bg-white mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Filtros</h5>
+            <form method="GET">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Tipo de Acción</label>
+                        <select name="tipo" class="form-select">
+                            <option value="">Todas</option>
+                            <option value="crear" {% if filtro_tipo == 'crear' %}selected{% endif %}>Crear</option>
+                            <option value="editar" {% if filtro_tipo == 'editar' %}selected{% endif %}>Editar</option>
+                            <option value="eliminar" {% if filtro_tipo == 'eliminar' %}selected{% endif %}>Eliminar</option>
+                            <option value="venta_manual" {% if filtro_tipo == 'venta_manual' %}selected{% endif %}>Venta Manual</option>
+                            <option value="inicio_delivery" {% if filtro_tipo == 'inicio_delivery' %}selected{% endif %}>Inicio Delivery</option>
+                            <option value="fin_delivery" {% if filtro_tipo == 'fin_delivery' %}selected{% endif %}>Fin Delivery</option>
+                            <option value="cambio_estado" {% if filtro_tipo == 'cambio_estado' %}selected{% endif %}>Cambio Estado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Usuario</label>
+                        <input type="text" name="usuario" class="form-control" placeholder="Nombre de usuario..." value="{{ filtro_usuario }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Desde</label>
+                        <input type="date" name="fecha_desde" class="form-control" value="{{ filtro_fecha_desde }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Hasta</label>
+                        <input type="date" name="fecha_hasta" class="form-control" value="{{ filtro_fecha_hasta }}">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fa-solid fa-filter"></i> Filtrar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de historial -->
+    <div class="card bg-white">
+        <div class="card-body">
+            <p class="text-muted">Mostrando últimos 100 registros</p>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Fecha/Hora</th>
+                            <th>Usuario</th>
+                            <th>Acción</th>
+                            <th>Modelo</th>
+                            <th>Descripción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cambio in cambios %}
+                        <tr>
+                            <td>{{ cambio.fecha|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <strong>{{ cambio.usuario.username }}</strong>
+                            </td>
+                            <td>
+                                {% if cambio.accion == 'crear' %}
+                                    <span class="badge bg-success">Crear</span>
+                                {% elif cambio.accion == 'editar' %}
+                                    <span class="badge bg-warning text-dark">Editar</span>
+                                {% elif cambio.accion == 'eliminar' %}
+                                    <span class="badge bg-danger">Eliminar</span>
+                                {% elif cambio.accion == 'venta_manual' %}
+                                    <span class="badge bg-info">Venta Manual</span>
+                                {% elif cambio.accion == 'inicio_delivery' %}
+                                    <span class="badge bg-primary">Inicio Delivery</span>
+                                {% elif cambio.accion == 'fin_delivery' %}
+                                    <span class="badge bg-secondary">Fin Delivery</span>
+                                {% else %}
+                                    <span class="badge bg-dark">{{ cambio.get_accion_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ cambio.modelo }}</td>
+                            <td>
+                                <small>{{ cambio.descripcion }}</small>
+                                {% if cambio.motivo_no_entrega %}
+                                    <br><span class="text-danger"><i class="fa-solid fa-exclamation-triangle"></i> {{ cambio.motivo_no_entrega }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No hay cambios registrados</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

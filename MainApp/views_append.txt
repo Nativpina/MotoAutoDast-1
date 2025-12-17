@@ -1,0 +1,19 @@
+﻿@login_required
+def confirmar_recepcion(request, pedido_id):
+    '''Permite al cliente confirmar la recepción del pedido'''
+    pedido = get_object_or_404(Compra, id=pedido_id, cliente__user=request.user)
+    
+    if request.method == 'POST':
+        if not pedido.recibido_por_cliente:
+            pedido.recibido_por_cliente = True
+            pedido.fecha_confirmacion_recepcion = timezone.now()
+            pedido.estado = 'enviado'
+            pedido.save()
+            
+            messages.success(request, '¡Gracias por confirmar la recepción de tu pedido!')
+        else:
+            messages.info(request, 'Ya habías confirmado la recepción de este pedido.')
+        
+        return redirect('pedido_detalle', pedido_id=pedido_id)
+    
+    return redirect('mis_pedidos')

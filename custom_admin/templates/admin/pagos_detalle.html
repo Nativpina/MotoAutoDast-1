@@ -2,66 +2,48 @@
 
 {% block content %}
 <div class="container-fluid mt-4">
-    <h2 class="text-white mb-4"><i class="fa-solid fa-file-invoice-dollar"></i> Gestión de Ventas</h2>
-
-    <!-- Mensajes de feedback -->
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-
-    <!-- Botón de acción -->
-    <div class="mb-4">
-        <a href="{% url 'admin:venta_manual' %}" class="btn btn-success">
-            <i class="fa-solid fa-plus"></i> Registrar Venta Manual
-        </a>
-    </div>
+    <h2 class="text-white mb-4">Detalle de Pagos</h2>
 
     <!-- Filtros -->
     <div class="card bg-white mb-4">
         <div class="card-body">
             <h5 class="card-title">Filtros de Búsqueda</h5>
-            <form method="GET" action="{% url 'admin:pagos' %}">
+            <form method="GET" action="{% url 'admin:pagos_detalle' %}">
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label">Cliente</label>
-                        <input type="text" name="cliente" class="form-control" placeholder="Nombre o email..." value="{{ filtro_cliente }}">
+                        <input type="text" name="cliente" class="form-control" placeholder="Nombre o email..." value="{{ request.GET.cliente }}">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Estado</label>
                         <select name="estado" class="form-select">
                             <option value="">Todos</option>
-                            <option value="pendiente" {% if filtro_estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
-                            <option value="en_camino" {% if filtro_estado == 'en_camino' %}selected{% endif %}>En camino</option>
-                            <option value="entregado" {% if filtro_estado == 'entregado' %}selected{% endif %}>Entregado</option>
-                            <option value="enviado" {% if filtro_estado == 'enviado' %}selected{% endif %}>Enviado</option>
-                            <option value="cancelado" {% if filtro_estado == 'cancelado' %}selected{% endif %}>Cancelado</option>
-                            <option value="no_entregado" {% if filtro_estado == 'no_entregado' %}selected{% endif %}>No entregado</option>
+                            <option value="pendiente" {% if request.GET.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                            <option value="en_camino" {% if request.GET.estado == 'en_camino' %}selected{% endif %}>En camino</option>
+                            <option value="entregado" {% if request.GET.estado == 'entregado' %}selected{% endif %}>Entregado</option>
+                            <option value="cancelado" {% if request.GET.estado == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                            <option value="no_entregado" {% if request.GET.estado == 'no_entregado' %}selected{% endif %}>No entregado</option>
                         </select>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Tipo de Entrega</label>
                         <select name="tipo_entrega" class="form-select">
                             <option value="">Todos</option>
-                            <option value="retiro" {% if filtro_tipo_entrega == 'retiro' %}selected{% endif %}>Retiro en tienda</option>
-                            <option value="envio" {% if filtro_tipo_entrega == 'envio' %}selected{% endif %}>Envío a domicilio</option>
+                            <option value="retiro" {% if request.GET.tipo_entrega == 'retiro' %}selected{% endif %}>Retiro en tienda</option>
+                            <option value="envio" {% if request.GET.tipo_entrega == 'envio' %}selected{% endif %}>Envío a domicilio</option>
                         </select>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Desde</label>
-                        <input type="date" name="fecha_desde" class="form-control" value="{{ filtro_fecha_desde }}">
+                        <input type="date" name="fecha_desde" class="form-control" value="{{ request.GET.fecha_desde }}">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Hasta</label>
-                        <input type="date" name="fecha_hasta" class="form-control" value="{{ filtro_fecha_hasta }}">
+                        <input type="date" name="fecha_hasta" class="form-control" value="{{ request.GET.fecha_hasta }}">
                     </div>
                     <div class="col-md-1 d-flex align-items-end">
                         <button type="submit" class="btn btn-primary w-100">
-                            <i class="fa-solid fa-filter"></i> Filtrar
+                            <i class="fa-solid fa-filter"></i>
                         </button>
                     </div>
                 </div>
@@ -72,8 +54,7 @@
     <!-- Tabla de resultados -->
     <div class="card bg-white">
         <div class="card-body">
-            <h5 class="card-title">Historial de Ventas</h5>
-            <p class="text-muted">Se encontraron {{ pagos|length }} venta{{ pagos|length|pluralize }}</p>
+            <p class="text-muted">Se encontraron {{ compras|length }} pedido{{ compras|length|pluralize }}</p>
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead class="table-dark">
@@ -90,11 +71,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for compra in pagos %}
+                        {% for compra in compras %}
                         <tr>
                             <td>#{{ compra.id }}</td>
                             <td>{{ compra.cliente.nombre_cliente }}</td>
-                            <td><small>{{ compra.cliente.email }}</small></td>
+                            <td>{{ compra.cliente.email }}</td>
                             <td>{{ compra.fecha_compra|date:"d/m/Y" }}</td>
                             <td class="fw-bold">${{ compra.monto|floatformat:0 }}</td>
                             <td>
@@ -104,8 +85,6 @@
                                     <span class="badge bg-primary">En camino</span>
                                 {% elif compra.estado == 'entregado' %}
                                     <span class="badge bg-success">Entregado</span>
-                                {% elif compra.estado == 'enviado' %}
-                                    <span class="badge bg-info">Enviado</span>
                                 {% elif compra.estado == 'no_entregado' %}
                                     <span class="badge bg-danger">No entregado</span>
                                 {% else %}
@@ -121,14 +100,14 @@
                             </td>
                             <td class="text-center">{{ compra.intentos_entrega }}</td>
                             <td>
-                                <a href="{% url 'pedido_detalle' compra.id %}" class="btn btn-sm btn-info" target="_blank" title="Ver detalle">
+                                <a href="{% url 'pedido_detalle' compra.id %}" class="btn btn-sm btn-info" target="_blank">
                                     <i class="fa-solid fa-eye"></i>
                                 </a>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="9" class="text-center text-muted">No se encontraron ventas con los filtros seleccionados</td>
+                            <td colspan="9" class="text-center text-muted">No se encontraron pedidos con los filtros seleccionados</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -136,6 +115,11 @@
             </div>
         </div>
     </div>
+
+    <div class="mt-3">
+        <a href="{% url 'admin:pagos' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+    </div>
 </div>
 {% endblock %}
-

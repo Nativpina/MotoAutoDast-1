@@ -54,7 +54,21 @@
                 <li class="nav-item mb-2">
                     <a href="{% url 'admin:pagos' %}" class="nav-link d-flex align-items-center">
                         <i class="fa-solid fa-file-invoice-dollar me-2" style="font-size: 1.5em; color: #ffffff;"></i>
-                        <span>Pagos</span>
+                        <span>Ventas</span>
+                    </a>
+                </li>
+
+                <li class="nav-item mb-2">
+                    <a href="{% url 'admin:entregas_pendientes' %}" class="nav-link d-flex align-items-center">
+                        <i class="fa-solid fa-truck me-2" style="font-size: 1.5em; color: #ffffff;"></i>
+                        <span>Entregas</span>
+                    </a>
+                </li>
+
+                <li class="nav-item mb-2">
+                    <a href="{% url 'admin:historial_cambios' %}" class="nav-link d-flex align-items-center">
+                        <i class="fa-solid fa-history me-2" style="font-size: 1.5em; color: #ffffff;"></i>
+                        <span>Historial</span>
                     </a>
                 </li>
 

@@ -1,5 +1,9 @@
 from django.urls import path
-from .views import dashboard, admin_login, pagos_view, venta_manual_view
+from .views import (
+    dashboard, admin_login, pagos_view, venta_manual_view,
+    pagos_detalle_view, entregas_pendientes_view, iniciar_entrega,
+    finalizar_entrega, historial_cambios_view
+)
 from django.contrib.auth.views import LogoutView
 from MainApp.views import (
     listar_productos, agregar_producto, editar_producto, eliminar_producto,
@@ -22,5 +26,12 @@ urlpatterns = [
     path('bodegas/agregar/', agregar_bodega, name='agregar_bodega'),
 
     path('pagos/', pagos_view, name='pagos'),
+    path('pagos/detalle/', pagos_detalle_view, name='pagos_detalle'),
     path('ventas/manual/', venta_manual_view, name='venta_manual'),
+    
+    path('entregas/', entregas_pendientes_view, name='entregas_pendientes'),
+    path('entregas/<int:entrega_id>/iniciar/', iniciar_entrega, name='iniciar_entrega'),
+    path('entregas/<int:entrega_id>/finalizar/', finalizar_entrega, name='finalizar_entrega'),
+    
+    path('historial/', historial_cambios_view, name='historial_cambios'),
 ]

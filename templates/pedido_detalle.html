@@ -21,16 +21,22 @@
                             Pendiente
                         </div>
                     </div>
-                {% elif pedido.estado == "enviado" %}
+                {% elif pedido.estado == "en_camino" %}
                     <div class="progress" style="height: 20px;">
                         <div class="progress-bar bg-primary" style="width: 70%;">
                             En camino
                         </div>
                     </div>
-                {% else %}
+                {% elif pedido.estado == "entregado" %}
                     <div class="progress" style="height: 20px;">
                         <div class="progress-bar bg-success" style="width: 100%;">
-                            Completado
+                            Entregado
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar bg-danger" style="width: 100%;">
+                            {{ pedido.get_estado_display }}
                         </div>
                     </div>
                 {% endif %}
@@ -44,6 +50,12 @@
                     Retiro en tienda
                 {% else %}
                     Envío a domicilio
+                {% endif %}
+                <br>
+                {% if pedido.confirmado_por_cliente %}
+                    <span class="badge bg-success mt-2">
+                        <i class="fa-solid fa-check-circle"></i> Confirmado por cliente el {{ pedido.fecha_confirmacion_cliente|date:"d/m/Y H:i" }}
+                    </span>
                 {% endif %}
             </p>
 
@@ -111,11 +123,22 @@
             ← Volver a mis pedidos
         </a>
 
-        {% if boleta %}
-        <a href="{% url 'descargar_boleta' boleta.numero %}" class="btn btn-primary">
-            Descargar boleta en PDF
-        </a>
-        {% endif %}
+        <div>
+            {% if boleta %}
+            <a href="{% url 'descargar_boleta' boleta.numero %}" class="btn btn-primary">
+                <i class="fa-solid fa-file-pdf"></i> Descargar boleta en PDF
+            </a>
+            {% endif %}
+            
+            {% if pedido.estado == 'en_camino' and not pedido.confirmado_por_cliente %}
+            <form method="POST" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" name="confirmar_recepcion" class="btn btn-success" onclick="return confirm('¿Confirmas que has recibido tu pedido?')">
+                    <i class="fa-solid fa-check-circle"></i> Confirmar recepción
+                </button>
+            </form>
+            {% endif %}
+        </div>
 
     </div>
 

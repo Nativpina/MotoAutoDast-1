@@ -62,16 +62,15 @@ def productos_por_categoria(request, nombre_categoria):
             total_visitas=Count('visita')
         ).filter(total_visitas__gt=0).order_by('-total_visitas')[:4]
         
-        # Excluir productos más vistos del resto
-        ids_mas_vistos = [p.id for p in productos_mas_vistos]
-        resto_productos = productos.exclude(id__in=ids_mas_vistos)
+        # Incluir TODOS los productos (sin excluir los más vistos)
+        todos_productos = productos.order_by('-id')  # Ordenar por más recientes
     else:
         productos_mas_vistos = []
-        resto_productos = []
+        todos_productos = []
     
     return render(request, 'catalogo.html', {
         'productos_mas_vistos': productos_mas_vistos,
-        'productos': resto_productos, 
+        'productos': todos_productos, 
         'categoria': nombre_categoria
     })
 
@@ -125,14 +124,39 @@ def registro(request):
 
 def buscar_productos(request):
     query = request.GET.get('q', '')
-    productos = Producto.objects.filter(
-        nombre_producto__icontains=query,
-        stock__gt=0
-    ) if query else []
+    categoria_id = request.GET.get('categoria', '')
+    orden = request.GET.get('orden', '')
+    
+    productos = Producto.objects.filter(stock__gt=0)
+    
+    # Filtro por nombre
+    if query:
+        productos = productos.filter(nombre_producto__icontains=query)
+    
+    # Filtro por categoría
+    if categoria_id:
+        productos = productos.filter(categoria_id=categoria_id)
+    
+    # Ordenamiento
+    if orden == 'precio_asc':
+        productos = productos.order_by('costo')
+    elif orden == 'precio_desc':
+        productos = productos.order_by('-costo')
+    elif orden == 'nombre':
+        productos = productos.order_by('nombre_producto')
+    else:
+        productos = productos.order_by('-id')  # Más recientes por defecto
+    
+    # Obtener categorías para el filtro
+    categorias = Categoria.objects.all()
 
     return render(request, 'busqueda.html', {
         'productos': productos,
-        'categoria': f"Resultados para '{query}'" if query else "Sin resultados"
+        'categorias': categorias,
+        'categoria': f"Resultados para '{query}'" if query else "Todos los productos",
+        'query': query,
+        'categoria_seleccionada': categoria_id,
+        'orden_seleccionado': orden
     })
 
 
@@ -458,7 +482,11 @@ def webpay_commit(request):
 
         # 🔹 Enviar correo SOLO si corresponde
         if compra.tipo_entrega != "retiro":
-            enviar_correo_confirmacion_pedido(compra)
+            try:
+                enviar_correo_confirmacion_pedido(compra)
+            except Exception as e:
+                # Si el correo falla, continuar sin interrumpir el proceso
+                print(f"Error al enviar correo: {e}")
 
         # 🔹 Limpiar sesiones
         request.session["carrito"] = {}
@@ -474,6 +502,7 @@ def webpay_commit(request):
         "orden": orden,
         "boleta": boleta,
         "es_retiro": compra.tipo_entrega == "retiro",
+        "envio_opcion": compra.tipo_entrega,
     })
 
 
@@ -498,7 +527,7 @@ def enviar_correo_confirmacion_pedido(compra):
         settings.DEFAULT_FROM_EMAIL,
         [usuario.email],
         html_message=html,
-        fail_silently=False,
+        fail_silently=True,  # No interrumpir si falla el correo
     )
 
 
@@ -683,6 +712,16 @@ def pedido_detalle(request, pedido_id):
     pedido = Compra.objects.get(id=pedido_id)
     productos = ProductoCompra.objects.filter(compra=pedido)
     boleta = Boleta.objects.filter(usuario=request.user, monto_total=pedido.monto).last()
+    
+    # Manejar confirmación de recepción por el cliente
+    if request.method == 'POST' and 'confirmar_recepcion' in request.POST:
+        if not pedido.confirmado_por_cliente:
+            pedido.confirmado_por_cliente = True
+            pedido.fecha_confirmacion_cliente = timezone.now()
+            pedido.estado = 'entregado'
+            pedido.save()
+            messages.success(request, '¡Gracias por confirmar la recepción de tu pedido!')
+        return redirect('pedido_detalle', pedido_id=pedido_id)
 
     return render(request, "pedido_detalle.html", {
         "pedido": pedido,

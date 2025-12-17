@@ -8,27 +8,73 @@
             {{ categoria }}
         </div>
     </div>
+
+    <!-- Filtros de búsqueda -->
+    <div class="container mt-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="GET" action="{% url 'buscar_productos' %}">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Buscar por nombre</label>
+                            <input type="text" name="q" class="form-control" placeholder="Nombre del producto..." value="{{ query }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Categoría</label>
+                            <select name="categoria" class="form-select">
+                                <option value="">Todas las categorías</option>
+                                {% for cat in categorias %}
+                                    <option value="{{ cat.id }}" {% if categoria_seleccionada == cat.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ cat.nombre_categoria }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Ordenar por</label>
+                            <select name="orden" class="form-select">
+                                <option value="">Más recientes</option>
+                                <option value="precio_asc" {% if orden_seleccionado == 'precio_asc' %}selected{% endif %}>Precio: menor a mayor</option>
+                                <option value="precio_desc" {% if orden_seleccionado == 'precio_desc' %}selected{% endif %}>Precio: mayor a menor</option>
+                                <option value="nombre" {% if orden_seleccionado == 'nombre' %}selected{% endif %}>Nombre A-Z</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-dark w-100">
+                                <i class="fa-solid fa-filter"></i> Filtrar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     
     <div class="container my-5">
+        <p class="text-muted">Se encontraron {{ productos|length }} producto{{ productos|length|pluralize }}</p>
+        
         <div class="row text-center mt-4">
             {% for producto in productos %}
                 <div class="col-md-4 mb-4">
                     <a href="{% url 'producto_detalle' producto.id %}" class="text-decoration-none">
-                        <div class="card border-0">
+                        <div class="card border-0 shadow-sm h-100">
                             {% if producto.imagen %}
-                                <img src="{{ producto.imagen.url }}" class="card-img-top producto-imagen mx-auto" alt="{{ producto.nombre_producto }}">
+                                <img src="{{ producto.imagen.url }}" class="card-img-top producto-imagen mx-auto" alt="{{ producto.nombre_producto }}" style="height: 200px; object-fit: cover; padding: 10px;">
                             {% else %}
-                                <img src="{% static 'images/placeholder.png' %}" class="card-img-top producto-imagen mx-auto" alt="Imagen no disponible">
+                                <div class="placeholder-image d-flex flex-column align-items-center justify-content-center" style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                    <i class="fa-solid fa-box-open mb-2" style="font-size: 3rem; color: #fff;"></i>
+                                    <small class="text-white">Sin imagen</small>
+                                </div>
                             {% endif %}
                             <div class="card-body">
                                 <h5 class="card-title text-dark">{{ producto.nombre_producto }}</h5>
-                                <p class="card-text">${{ producto.costo|floatformat:0 }}</p>
+                                <p class="card-text text-success fw-bold">${{ producto.costo|floatformat:0 }}</p>
                             </div>
                         </div>
                     </a>
                 </div>
             {% empty %}
-                <p>No hay productos disponibles en la categoría {{ categoria }}.</p>
+                <p class="text-center text-muted">No se encontraron productos con los filtros seleccionados.</p>
             {% endfor %}
         </div>
     </div>
