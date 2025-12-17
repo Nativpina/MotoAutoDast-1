@@ -361,7 +361,8 @@ def webpay_commit(request):
         user=request.user,
         defaults={
             'nombre_cliente': request.user.username,
-            'email': request.user.email
+            'email': request.user.email,
+            'num': 0  # Valor por defecto para el campo num
         }
     )
 

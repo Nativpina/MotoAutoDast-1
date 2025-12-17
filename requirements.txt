@@ -9,6 +9,7 @@ django-storages
 azure-storage-blob
 transbank-sdk
 Pillow
+reportlab
 
 
 
