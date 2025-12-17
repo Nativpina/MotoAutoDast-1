@@ -13,8 +13,82 @@
         </div>
     </div>
 
-    <!-- Contenedor de productos -->
+    <!-- Barra de búsqueda y filtros -->
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <form method="GET" action="">
+                    <div class="input-group mb-3">
+                        <input type="text" 
+                               class="form-control" 
+                               name="q" 
+                               placeholder="Buscar productos en {{ categoria }}..." 
+                               value="{{ request.GET.q }}">
+                        <button class="btn btn-dark" type="submit">
+                            <i class="fa-solid fa-search"></i> Buscar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección: Productos Más Vistos -->
+    {% if productos_mas_vistos %}
     <div class="container my-5">
+        <div class="d-flex align-items-center mb-4">
+            <i class="fa-solid fa-fire text-danger me-2" style="font-size: 1.8rem;"></i>
+            <h3 class="mb-0 fw-bold">Productos Más Vistos</h3>
+        </div>
+        
+        <div class="row text-center">
+            {% for producto in productos_mas_vistos %}
+                <div class="col-md-3 mb-4">
+                    <a href="{% url 'producto_detalle' producto.id %}" class="text-decoration-none">
+                        <div class="card border-0 shadow-sm h-100 product-card-featured">
+                            
+                            <!-- Badge de popularidad -->
+                            <div class="position-relative">
+                                <span class="badge bg-danger position-absolute top-0 end-0 m-2">
+                                    <i class="fa-solid fa-eye me-1"></i> {{ producto.total_visitas }}
+                                </span>
+                                
+                                {% if producto.imagen %}
+                                    <img src="{{ producto.imagen.url }}"
+                                         class="card-img-top producto-imagen-featured mx-auto"
+                                         alt="{{ producto.nombre_producto }}">
+                                {% else %}
+                                    <div class="placeholder-image-featured d-flex align-items-center justify-content-center">
+                                        <i class="fa-solid fa-box-open" style="font-size: 4rem; color: #ccc;"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="card-body">
+                                <h6 class="card-title text-dark fw-bold">{{ producto.nombre_producto }}</h6>
+                                <p class="card-text text-primary fw-bold fs-5">${{ producto.costo|floatformat:0 }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Sección: Catálogo Completo -->
+    <div class="container my-5">
+        {% if productos_mas_vistos %}
+            <div class="d-flex align-items-center mb-4">
+                <i class="fa-solid fa-th-large me-2" style="font-size: 1.5rem; color: #555;"></i>
+                <h4 class="mb-0">Todos los Productos</h4>
+            </div>
+        {% endif %}
+
+        {% if request.GET.q %}
+            <p class="text-muted">Mostrando resultados para "{{ request.GET.q }}" en {{ categoria }}</p>
+        {% endif %}
+
         <div class="row text-center mt-4">
 
             {% for producto in productos %}
@@ -23,21 +97,22 @@
                     <!-- Enlace al detalle del producto -->
                     <a href="{% url 'producto_detalle' producto.id %}" class="text-decoration-none">
 
-                        <div class="card border-0">
+                        <div class="card border-0 shadow-sm h-100 product-card">
 
                             {% if producto.imagen %}
                                 <img src="{{ producto.imagen.url }}"
                                      class="card-img-top producto-imagen mx-auto"
                                      alt="{{ producto.nombre_producto }}">
                             {% else %}
-                                <img src="{% static 'images/placeholder.png' %}"
-                                     class="card-img-top producto-imagen mx-auto"
-                                     alt="Imagen no disponible">
+                                <div class="placeholder-image d-flex flex-column align-items-center justify-content-center">
+                                    <i class="fa-solid fa-box-open mb-2" style="font-size: 3rem; color: #999;"></i>
+                                    <small class="text-muted">Sin imagen</small>
+                                </div>
                             {% endif %}
 
                             <div class="card-body">
                                 <h5 class="card-title text-dark">{{ producto.nombre_producto }}</h5>
-                                <p class="card-text">${{ producto.costo|floatformat:0 }}</p>
+                                <p class="card-text text-success fw-bold">${{ producto.costo|floatformat:0 }}</p>
                             </div>
 
                         </div>
@@ -46,11 +121,64 @@
 
                 </div>
             {% empty %}
-                <p>No hay productos disponibles en la categoría {{ categoria }}.</p>
+                {% if not productos_mas_vistos %}
+                    <p class="text-center text-muted">No hay productos disponibles{% if request.GET.q %} para "{{ request.GET.q }}"{% endif %} en {{ categoria }}.</p>
+                {% endif %}
             {% endfor %}
 
         </div>
     </div>
 
 </main>
+
+<style>
+    /* Cards de productos más vistos */
+    .product-card-featured {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 2px solid #ffc107 !important;
+    }
+    
+    .product-card-featured:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3) !important;
+    }
+    
+    .producto-imagen-featured {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        padding: 15px;
+    }
+    
+    .placeholder-image-featured {
+        width: 100%;
+        height: 220px;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 8px 8px 0 0;
+    }
+    
+    /* Cards de productos regulares */
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.15) !important;
+    }
+    
+    .producto-imagen {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        padding: 10px;
+    }
+    
+    .placeholder-image {
+        width: 100%;
+        height: 200px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 8px 8px 0 0;
+    }
+</style>
 {% endblock %}

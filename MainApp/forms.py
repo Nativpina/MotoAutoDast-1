@@ -38,10 +38,12 @@ class CustomUserCreationForm(UserCreationForm):
             'class': 'form-control mb-3 p-2',
             'placeholder': 'Ingresa tu contraseña'
         })
+        self.fields['password1'].help_text = 'Tu contraseña debe tener al menos 8 caracteres y no puede ser completamente numérica.'
         self.fields['password2'].widget.attrs.update({
             'class': 'form-control mb-3 p-2',
             'placeholder': 'Confirma tu contraseña'
         })
+        self.fields['password2'].help_text = 'Ingresa la misma contraseña para verificación.'
 
     def clean_email(self):
         email = self.cleaned_data.get('email')

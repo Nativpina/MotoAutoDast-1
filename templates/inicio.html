@@ -20,15 +20,18 @@
                     
                     <div class="col-md-4 mb-4">
                         <a href="{% url 'producto_detalle' producto.id %}" class="text-decoration-none">
-                            <div class="card border-0">
+                            <div class="card border-0 shadow-sm h-100 product-card-hover">
                                 {% if producto.imagen %}
-                                    <img src="{{ producto.imagen.url }}" class="card-img-top imgStyle mx-auto" alt="{{ producto.nombre_producto }}" style="width: 200px;">
+                                    <img src="{{ producto.imagen.url }}" class="card-img-top imgStyle mx-auto" alt="{{ producto.nombre_producto }}" style="width: 200px; height: 200px; object-fit: cover; padding: 10px;">
                                 {% else %}
-                                    <img src="{% static 'images/placeholder.png' %}" class="card-img-top imgStyle mx-auto" alt="Imagen no disponible" style="width: 200px;">
+                                    <div class="placeholder-inicio d-flex flex-column align-items-center justify-content-center mx-auto" style="width: 200px; height: 200px; border-radius: 8px;">
+                                        <i class="fa-solid fa-box-open mb-2" style="font-size: 3rem; color: rgba(255,255,255,0.8);"></i>
+                                        <small class="text-white">Sin imagen</small>
+                                    </div>
                                 {% endif %}
                                 <div class="card-body">
                                     <h5 class="card-title text-dark">{{ producto.nombre_producto }}</h5>
-                                    <p class="card-text">${{ producto.costo|floatformat:0 }}</p>
+                                    <p class="card-text text-success fw-bold">${{ producto.costo|floatformat:0 }}</p>
                                 </div>
                             </div>
                         </a>
@@ -53,4 +56,19 @@
         </div>
     </div>
 </main>
+
+<style>
+    .product-card-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .product-card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.15) !important;
+    }
+    
+    .placeholder-inicio {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+</style>
 {% endblock %}

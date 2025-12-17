@@ -130,31 +130,18 @@
                             <small class="text-muted">Stock disponible: <span id="stock_info">-</span></small>
                         </div>
 
-                        <!-- Monto automático -->
+                        <!-- Monto total (readonly, siempre visible) -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">Monto Total</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="monto_calculado" step="0.01" readonly>
+                                <input type="text" class="form-control bg-light" id="monto_display" readonly value="0">
                             </div>
+                            <small class="text-muted">Este monto se calcula automáticamente según la cantidad seleccionada.</small>
                         </div>
 
-                        <!-- Checkbox para monto personalizado -->
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="usar_monto_custom" name="usar_monto_custom" onchange="toggleMontoCustom()">
-                            <label class="form-check-label" for="usar_monto_custom">
-                                Usar monto personalizado
-                            </label>
-                        </div>
-
-                        <!-- Monto personalizado (oculto por defecto) -->
-                        <div class="mb-3" id="monto_custom_container" style="display: none;">
-                            <label for="monto_personalizado" class="form-label fw-bold">Monto Personalizado</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="monto_personalizado" name="monto_personalizado" step="0.01" min="0">
-                            </div>
-                        </div>
+                        <!-- Campo oculto para enviar el monto -->
+                        <input type="hidden" id="monto_total" name="monto_total" value="0">
 
                         <!-- Botones -->
                         <div class="d-flex justify-content-between mt-4">
@@ -208,25 +195,12 @@
     function calcularMonto() {
         const cantidad = parseInt(document.getElementById('cantidad').value) || 0;
         const total = cantidad * productoData.precio;
-        document.getElementById('monto_calculado').value = total.toFixed(2);
-    }
-
-    function toggleMontoCustom() {
-        const checked = document.getElementById('usar_monto_custom').checked;
-        const container = document.getElementById('monto_custom_container');
-        const montoCalculado = document.getElementById('monto_calculado');
-        const montoPersonalizado = document.getElementById('monto_personalizado');
         
-        if (checked) {
-            container.style.display = 'block';
-            montoCalculado.readOnly = true;
-            montoPersonalizado.required = true;
-            montoPersonalizado.value = montoCalculado.value;
-        } else {
-            container.style.display = 'none';
-            montoCalculado.readOnly = true;
-            montoPersonalizado.required = false;
-        }
+        // Actualizar display con formato de moneda chilena
+        document.getElementById('monto_display').value = '$' + total.toLocaleString('es-CL');
+        
+        // Actualizar campo oculto con valor numérico
+        document.getElementById('monto_total').value = total;
     }
 
     // Validación antes de enviar

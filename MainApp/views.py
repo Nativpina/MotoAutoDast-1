@@ -33,7 +33,11 @@ from django.views.decorators.csrf import csrf_exempt
 # ================================
 
 def inicio(request):
-    productos = Producto.objects.filter(stock__gt=0)
+    # Mostrar productos más vistos en la página de inicio
+    productos = Producto.objects.filter(stock__gt=0).annotate(
+        total_visitas=Count('visita')
+    ).order_by('-total_visitas')[:12]  # Top 12 productos más vistos
+    
     return render(request, 'inicio.html', {'productos': productos})
 
 
@@ -44,8 +48,32 @@ def lista_productos(request):
 
 def productos_por_categoria(request, nombre_categoria):
     categoria = Categoria.objects.filter(nombre_categoria=nombre_categoria).first()
-    productos = Producto.objects.filter(categoria=categoria, stock__gt=0) if categoria else []
-    return render(request, 'catalogo.html', {'productos': productos, 'categoria': nombre_categoria})
+    
+    if categoria:
+        productos = Producto.objects.filter(categoria=categoria, stock__gt=0)
+        
+        # Filtrado por búsqueda
+        query = request.GET.get('q', '').strip()
+        if query:
+            productos = productos.filter(nombre_producto__icontains=query)
+        
+        # Obtener productos más vistos (top 4)
+        productos_mas_vistos = productos.annotate(
+            total_visitas=Count('visita')
+        ).filter(total_visitas__gt=0).order_by('-total_visitas')[:4]
+        
+        # Excluir productos más vistos del resto
+        ids_mas_vistos = [p.id for p in productos_mas_vistos]
+        resto_productos = productos.exclude(id__in=ids_mas_vistos)
+    else:
+        productos_mas_vistos = []
+        resto_productos = []
+    
+    return render(request, 'catalogo.html', {
+        'productos_mas_vistos': productos_mas_vistos,
+        'productos': resto_productos, 
+        'categoria': nombre_categoria
+    })
 
 
 Aceites = lambda r: productos_por_categoria(r, "Aceite")
@@ -56,6 +84,10 @@ Repuestos = lambda r: productos_por_categoria(r, "Repuestos")
 
 def producto_detalle(request, id):
     producto = get_object_or_404(Producto, id=id)
+    
+    # Registrar visita al producto
+    Visita.objects.create(producto=producto)
+    
     form = AddToCartForm(initial={'producto_id': producto.id})
     return render(request, 'producto_detalle.html', {'producto': producto, 'form': form})
 
@@ -222,7 +254,8 @@ def form_contacto(request):
 
     if request.method == 'POST' and form.is_valid():
         form.save()
-        return redirect('lista_contactos')
+        messages.success(request, 'Mensaje enviado exitosamente. Nos pondremos en contacto contigo pronto.')
+        return redirect('form_contactos')
 
     return render(request, 'contacto.html', {'form': form})
 

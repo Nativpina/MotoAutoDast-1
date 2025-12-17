@@ -43,7 +43,7 @@
                                 <div id="categorias-slider" class="d-flex" style="transition: transform 0.3s ease;">
                                     {% for categoria in categorias_navbar %}
                                     <a class="nav-link me-3 fw-bold text-nowrap categoria-item" 
-                                       href="{% url 'lista_aceites' %}" 
+                                       href="#" 
                                        onclick="filtrarPorCategoria('{{ categoria.nombre_categoria }}'); return false;">
                                         {{ categoria.nombre_categoria }}
                                     </a>
@@ -195,16 +195,8 @@
         }
 
         function filtrarPorCategoria(nombreCategoria) {
-            // Redirigir a la URL correspondiente según el nombre de categoría
-            const categoriaMap = {
-                'Aceite': '{% url "lista_aceites" %}',
-                'Accesorios': '{% url "lista_accesorios" %}',
-                'Neumaticos': '{% url "lista_neumaticos" %}',
-                'Neumáticos': '{% url "lista_neumaticos" %}',
-                'Repuestos': '{% url "lista_repuestos" %}'
-            };
-            
-            const url = categoriaMap[nombreCategoria] || '{% url "inicio" %}';
+            // Redirigir a la URL dinámica de categoría
+            const url = `/categoria/${encodeURIComponent(nombreCategoria)}/`;
             window.location.href = url;
         }
 
