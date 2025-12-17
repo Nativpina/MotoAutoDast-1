@@ -27,12 +27,38 @@
                 <a class="navbar-brand" href="{% url 'inicio' %}">
                     <img src="{% static 'images/logo2.png' %}" alt="Logo" class="ms-4 img-fluid" style="width: 110px;" />
                 </a>
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 position-relative">
                     <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'inicio' %}">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'lista_aceites' %}">Aceite</a></li>
-                    <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'lista_accesorios' %}">Accesorios</a></li>
-                    <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'lista_neumaticos' %}">Neumáticos</a></li>
-                    <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'lista_repuestos' %}">Repuestos</a></li>
+                    
+                    <!-- Contenedor de categorías con navegación -->
+                    <li class="nav-item dropdown position-relative">
+                        <div class="d-flex align-items-center">
+                            {% if categorias_navbar|length > 4 %}
+                            <button class="btn btn-link nav-link p-0 me-2" id="prevCat" onclick="navegarCategorias(-1)">
+                                <i class="fa-solid fa-chevron-left text-white"></i>
+                            </button>
+                            {% endif %}
+                            
+                            <div id="categorias-container" style="overflow: hidden; max-width: 500px;">
+                                <div id="categorias-slider" class="d-flex" style="transition: transform 0.3s ease;">
+                                    {% for categoria in categorias_navbar %}
+                                    <a class="nav-link me-3 fw-bold text-nowrap categoria-item" 
+                                       href="{% url 'lista_aceites' %}" 
+                                       onclick="filtrarPorCategoria('{{ categoria.nombre_categoria }}'); return false;">
+                                        {{ categoria.nombre_categoria }}
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            {% if categorias_navbar|length > 4 %}
+                            <button class="btn btn-link nav-link p-0 ms-2" id="nextCat" onclick="navegarCategorias(1)">
+                                <i class="fa-solid fa-chevron-right text-white"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </li>
+                    
                     <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'form_contactos' %}">Contacto</a></li>
                     {% if user.is_superuser %}
                     <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'admin:dashboard' %}">ADMIN</a></li>
@@ -141,6 +167,55 @@
 
     
     <script src="{% static 'js/InputSearch.js' %}"></script>
+
+    <!-- Script para navegación de categorías -->
+    <script>
+        let currentIndex = 0;
+        const itemsPerPage = 4;
+        const items = document.querySelectorAll('.categoria-item');
+        const totalItems = items.length;
+        const maxIndex = Math.max(0, Math.ceil(totalItems / itemsPerPage) - 1);
+
+        function navegarCategorias(direction) {
+            currentIndex += direction;
+            
+            // Limitar índice
+            if (currentIndex < 0) currentIndex = 0;
+            if (currentIndex > maxIndex) currentIndex = maxIndex;
+            
+            // Calcular desplazamiento
+            const itemWidth = items[0] ? items[0].offsetWidth + 16 : 100; // 16px = me-3 margin
+            const offset = -currentIndex * itemsPerPage * itemWidth;
+            
+            document.getElementById('categorias-slider').style.transform = `translateX(${offset}px)`;
+            
+            // Deshabilitar botones en los límites
+            document.getElementById('prevCat').disabled = currentIndex === 0;
+            document.getElementById('nextCat').disabled = currentIndex === maxIndex;
+        }
+
+        function filtrarPorCategoria(nombreCategoria) {
+            // Redirigir a la URL correspondiente según el nombre de categoría
+            const categoriaMap = {
+                'Aceite': '{% url "lista_aceites" %}',
+                'Accesorios': '{% url "lista_accesorios" %}',
+                'Neumaticos': '{% url "lista_neumaticos" %}',
+                'Neumáticos': '{% url "lista_neumaticos" %}',
+                'Repuestos': '{% url "lista_repuestos" %}'
+            };
+            
+            const url = categoriaMap[nombreCategoria] || '{% url "inicio" %}';
+            window.location.href = url;
+        }
+
+        // Inicializar estado de botones
+        if (totalItems <= itemsPerPage) {
+            const prevBtn = document.getElementById('prevCat');
+            const nextBtn = document.getElementById('nextCat');
+            if (prevBtn) prevBtn.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'none';
+        }
+    </script>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>

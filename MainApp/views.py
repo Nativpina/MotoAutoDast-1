@@ -147,12 +147,21 @@ def editar_producto(request, producto_id):
         form = ProductoForm(request.POST, request.FILES, instance=producto)
         if form.is_valid():
             form.save()
-            return redirect('listar_productos')
+            return redirect('admin:listar_productos')
 
     else:
         form = ProductoForm(instance=producto)
 
-    return render(request, 'admin/editar_producto.html', {'form': form, 'producto': producto})
+    # Pasar categorías y bodegas al template
+    categorias = Categoria.objects.all()
+    bodegas = Bodega.objects.all()
+
+    return render(request, 'admin/editar_producto.html', {
+        'form': form,
+        'producto': producto,
+        'categorias': categorias,
+        'bodegas': bodegas
+    })
 
 
 def eliminar_producto(request, producto_id):
