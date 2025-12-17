@@ -13,161 +13,174 @@ from MainApp.models import Visita
 
 def admin_login(req):
     try:
-        # Verificar si ya está autenticado
         if req.user.is_authenticated:
             if req.user.is_superuser:
                 return redirect('/admin/dashboard/')
             else:
-                return redirect('/')
+                return redirect('/')  # Redirige a la página de inicio si no es superusuario
 
         if req.method == 'POST':
-            username = req.POST.get('username', '').strip()
-            password = req.POST.get('password', '')
+            username = req.POST.get('username')
+            password = req.POST.get('password')
 
-            if not username or not password:
-                messages.warning(req, 'Por favor ingrese usuario y contraseña')
-                return render(req, 'admin/Adminlogin.html')
-
-            try:
-                # Verificar si el usuario existe
-                user_obj = User.objects.filter(username=username).first()
-                if not user_obj:
-                    messages.warning(req, 'Usuario no encontrado')
-                    return render(req, 'admin/Adminlogin.html')
-            except Exception as db_error:
-                # Error de base de datos - probablemente tablas no migradas
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.error(f"Error BD en admin_login: {str(db_error)}", exc_info=True)
-                messages.error(req, 'Error de base de datos. Contacte al administrador.')
-                return render(req, 'admin/Adminlogin.html')
+            # Verificar si el usuario existe
+            user_obj = User.objects.filter(username=username).first()
+            if not user_obj:
+                messages.info(req, 'Cuenta no encontrada')
+                return HttpResponseRedirect(req.META.get('HTTP_REFERER'))
             
             # Autenticar al usuario
             user_obj = authenticate(username=username, password=password)
 
             if user_obj:
                 if user_obj.is_superuser:
+                    # Iniciar sesión y redirigir al dashboard si es superusuario
                     login(req, user_obj)
                     return redirect('/admin/dashboard/')
                 else:
-                    messages.warning(req, 'No tienes permisos de administrador')
-                    return render(req, 'admin/Adminlogin.html')
+                    # Redirige a la página de inicio si el usuario no es superusuario
+                    messages.info(req, 'No tienes permiso para acceder a esta sección')
+                    return redirect('/')
             else:
-                messages.error(req, 'Contraseña incorrecta')
-                return render(req, 'admin/Adminlogin.html')
+                messages.info(req, 'Contraseña Incorrecta')
+                return HttpResponseRedirect(req.META.get('HTTP_REFERER'))
 
         return render(req, 'admin/Adminlogin.html')
     
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Error general en admin_login: {str(e)}", exc_info=True)
-        messages.error(req, f'Error: {str(e)}')
-        return render(req, 'admin/Adminlogin.html')
+        print(e)
 
 
 
 
-@login_required(login_url='/admin/')
+@login_required
 def dashboard(req):
-    import logging
-    logger = logging.getLogger(__name__)
-    
-    try:
-        # Solo superusuarios pueden entrar
-        if not req.user.is_superuser:
-            messages.warning(req, 'No tienes permisos para acceder al panel de administración.')
-            return redirect('/')
 
-        # ------------------- TARJETAS SUPERIORES -------------------
-        try:
-            total_pedidos_pendientes = Compra.objects.filter(estado='pendiente').count()
-        except Exception:
-            total_pedidos_pendientes = 0
+    # Solo superusuarios pueden entrar
+    if not req.user.is_superuser:
+        return redirect('/')
 
-        try:
-            total_pedidos_enviados = Compra.objects.filter(estado='enviado').count()
-        except Exception:
-            total_pedidos_enviados = 0
+    # ------------------- TARJETAS SUPERIORES -------------------
 
-        try:
-            total_ventas = Compra.objects.filter(
-                estado='enviado'
-            ).aggregate(total=Sum('monto'))['total'] or 0
-        except Exception:
-            total_ventas = 0
+    # Pedidos Pendientes
+    total_pedidos_pendientes = Compra.objects.filter(estado='pendiente').count()
 
-        # ------------------- VISITAS POR MES -------------------
-        meses_labels = [
-            "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-            "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
-        ]
+    # Pedidos Enviados
+    total_pedidos_enviados = Compra.objects.filter(estado='enviado').count()
 
-        visitas_data = []
-        try:
-            visitas_data = [
-                Visita.objects.filter(fecha__month=i).count() for i in range(1, 13)
-            ]
-        except Exception:
-            visitas_data = [0] * 12
+    # Ventas Totales
+    total_ventas = Compra.objects.filter(
+        estado='enviado'
+    ).aggregate(
+        total=Sum('monto')
+    )['total'] or 0
 
-        # ------------------- CATEGORÍAS MÁS VISTAS -------------------
-        categorias_labels = []
-        categorias_valores = []
+    # ------------------- VISITAS POR MES -------------------
 
-        try:
-            for categoria in Categoria.objects.all():
-                try:
-                    visitas_categoria = Visita.objects.filter(
-                        producto__categoria=categoria
-                    ).count()
-                    categorias_labels.append(str(categoria.nombre_categoria))
-                    categorias_valores.append(int(visitas_categoria))
-                except Exception:
-                    continue
-        except Exception:
-            pass
+    meses_labels = [
+        "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+        "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+    ]
 
-        # Si no hay categorías, agregar valores por defecto para el gráfico
-        if not categorias_labels:
-            categorias_labels = ["Sin datos"]
-            categorias_valores = [0]
+    visitas_data = [
+        Visita.objects.filter(fecha__month=i).count() for i in range(1, 13)
+    ]
 
-        # ------------------- CONTEXTO -------------------
-        context = {
-            "total_pedidos_pendientes": total_pedidos_pendientes,
-            "total_pedidos_enviados": total_pedidos_enviados,
-            "total_ventas": total_ventas,
-            "meses_labels": meses_labels,
-            "visitas_data": visitas_data,
-            "categorias_labels": categorias_labels,
-            "categorias_valores": categorias_valores,
-        }
+    # ------------------- CATEGORÍAS MÁS VISTAS -------------------
 
-        logger.info(f"Dashboard context: {context}")
-        return render(req, "admin/dashboard.html", context)
-        
-    except Exception as e:
-        logger.error(f"Error fatal en dashboard: {str(e)}", exc_info=True)
-        messages.error(req, f'Error al cargar el dashboard: {str(e)}')
-        # Renderizar una versión simple con el error
-        return render(req, "admin/dashboard.html", {
-            "total_pedidos_pendientes": 0,
-            "total_pedidos_enviados": 0,
-            "total_ventas": 0,
-            "meses_labels": ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"],
-            "visitas_data": [0] * 12,
-            "categorias_labels": ["Sin datos"],
-            "categorias_valores": [0],
-            "error": str(e)
-        })
-@login_required(login_url='/admin/')
+    categorias_labels = []
+    categorias_valores = []
+
+    for categoria in Categoria.objects.all():
+        visitas_categoria = Visita.objects.filter(
+            producto__categoria=categoria
+        ).count()
+
+        categorias_labels.append(str(categoria.nombre_categoria))
+        categorias_valores.append(int(visitas_categoria))
+
+    # ------------------- CONTEXTO -------------------
+
+    context = {
+        "total_pedidos_pendientes": total_pedidos_pendientes,
+        "total_pedidos_enviados": total_pedidos_enviados,
+        "total_ventas": total_ventas,
+        "meses_labels": meses_labels,
+        "visitas_data": visitas_data,
+        "categorias_labels": categorias_labels,
+        "categorias_valores": categorias_valores,
+    }
+
+    return render(req, "admin/dashboard.html", context)
+
+@login_required
 def pagos_view(request):
     if not request.user.is_superuser:
-        messages.warning(request, 'No tienes permisos para acceder a esta sección.')
         return redirect('/')
+    
+    # Manejar creación de venta manual
+    if request.method == 'POST' and 'venta_manual' in request.POST:
+        producto_id = request.POST.get('producto_id')
+        cantidad = int(request.POST.get('cantidad', 0))
+        precio_unitario = request.POST.get('precio_unitario')
+        cliente_nombre = request.POST.get('cliente_nombre', '').strip()
+        
+        # Validaciones
+        if not producto_id or cantidad <= 0 or not precio_unitario or not cliente_nombre:
+            messages.error(request, 'Todos los campos son obligatorios y la cantidad debe ser mayor a 0.')
+        else:
+            try:
+                producto = Producto.objects.get(id=producto_id)
+                precio_unitario = float(precio_unitario)
+                
+                # Validar stock disponible
+                if cantidad > producto.stock:
+                    messages.error(request, f'Stock insuficiente. Solo hay {producto.stock} unidades disponibles.')
+                else:
+                    # Crear o buscar cliente genérico para ventas manuales
+                    cliente, created = Cliente.objects.get_or_create(
+                        nombre_cliente=cliente_nombre,
+                        defaults={'email': 'venta_manual@local.com', 'num': 0}
+                    )
+                    
+                    # Crear la compra
+                    compra = Compra.objects.create(
+                        fecha_compra=timezone.now().date(),
+                        cliente=cliente,
+                        estado='enviado',
+                        monto=cantidad * precio_unitario,
+                        tipo_entrega='retiro'
+                    )
+                    
+                    # Crear el producto de compra
+                    ProductoCompra.objects.create(
+                        compra=compra,
+                        producto=producto,
+                        cantidad=cantidad,
+                        precio_unitario_venta=precio_unitario
+                    )
+                    
+                    # Restar del stock
+                    producto.stock -= cantidad
+                    producto.save()
+                    
+                    messages.success(request, f'Venta manual registrada exitosamente. Stock actualizado: {producto.stock} unidades.')
+                    return redirect('admin:pagos')
+                    
+            except Producto.DoesNotExist:
+                messages.error(request, 'Producto no encontrado.')
+            except ValueError:
+                messages.error(request, 'Precio unitario inválido.')
+            except Exception as e:
+                messages.error(request, f'Error al registrar la venta: {str(e)}')
+    
     pagos = Compra.objects.select_related('cliente').order_by('-fecha_compra')
-    return render(request, 'admin/pagos.html', {'pagos': pagos})
+    productos = Producto.objects.filter(stock__gt=0).order_by('nombre_producto')
+    
+    return render(request, 'admin/pagos.html', {
+        'pagos': pagos,
+        'productos': productos
+    })
 
 
 def ajustes(request):

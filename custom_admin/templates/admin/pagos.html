@@ -2,31 +2,148 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-white">Historial de Pagos</h2>
+    <h2 class="text-white mb-4">Gestión de Pagos y Ventas</h2>
+    
+    <!-- Mensajes de feedback -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Botón para abrir modal de venta manual -->
+    <button type="button" class="btn btn-success mb-4" data-bs-toggle="modal" data-bs-target="#ventaManualModal">
+        <i class="fa-solid fa-plus"></i> Registrar Venta Manual
+    </button>
+
+    <!-- Modal para venta manual -->
+    <div class="modal fade" id="ventaManualModal" tabindex="-1" aria-labelledby="ventaManualModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-dark" id="ventaManualModalLabel">Registrar Venta Manual</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="venta_manual" value="1">
+                    <div class="modal-body">
+                        <!-- Nombre del Cliente -->
+                        <div class="mb-3">
+                            <label for="cliente_nombre" class="form-label text-dark">Nombre del Cliente</label>
+                            <input type="text" class="form-control" id="cliente_nombre" name="cliente_nombre" required placeholder="Ej: Juan Pérez">
+                        </div>
+
+                        <!-- Producto -->
+                        <div class="mb-3">
+                            <label for="producto_id" class="form-label text-dark">Producto</label>
+                            <select class="form-select" id="producto_id" name="producto_id" required onchange="updatePrecio()">
+                                <option value="">Seleccione un producto</option>
+                                {% for producto in productos %}
+                                    <option value="{{ producto.id }}" data-precio="{{ producto.costo }}" data-stock="{{ producto.stock }}">
+                                        {{ producto.nombre_producto }} (Stock: {{ producto.stock }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Cantidad -->
+                        <div class="mb-3">
+                            <label for="cantidad" class="form-label text-dark">Cantidad</label>
+                            <input type="number" class="form-control" id="cantidad" name="cantidad" min="1" required>
+                            <small class="text-muted">Stock disponible: <span id="stock_disponible">-</span></small>
+                        </div>
+
+                        <!-- Precio Unitario -->
+                        <div class="mb-3">
+                            <label for="precio_unitario" class="form-label text-dark">Precio Unitario</label>
+                            <input type="number" class="form-control" id="precio_unitario" name="precio_unitario" step="0.01" min="0" required>
+                        </div>
+
+                        <!-- Total -->
+                        <div class="mb-3">
+                            <label class="form-label text-dark">Total Estimado</label>
+                            <p class="fw-bold text-dark" id="total_estimado">$0</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Registrar Venta</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de historial de pagos -->
+    <h3 class="text-white mt-5">Historial de Pagos</h3>
     {% if pagos %}
-    <table class="table table-bordered table-striped bg-white">
-        <thead>
-            <tr>
-                <th>Cliente</th>
-                <th>Monto</th>
-                <th>Fecha</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for pago in pagos %}
-            <tr>
-                <td>{{ pago.cliente.nombre_cliente }}</td>
-                <td>${{ pago.monto }}</td>
-                <td>{{ pago.fecha_compra }}</td>
-                <td>{{ pago.estado }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped bg-white">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Monto</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th>Tipo Entrega</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pago in pagos %}
+                <tr>
+                    <td>{{ pago.id }}</td>
+                    <td>{{ pago.cliente.nombre_cliente }}</td>
+                    <td>${{ pago.monto }}</td>
+                    <td>{{ pago.fecha_compra }}</td>
+                    <td>
+                        {% if pago.estado == 'pendiente' %}
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                        {% elif pago.estado == 'enviado' %}
+                            <span class="badge bg-success">Enviado</span>
+                        {% else %}
+                            <span class="badge bg-danger">Cancelado</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ pago.get_tipo_entrega_display }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
         <p class="text-light">No hay pagos registrados.</p>
     {% endif %}
 </div>
+
+<script>
+    function updatePrecio() {
+        const select = document.getElementById('producto_id');
+        const option = select.options[select.selectedIndex];
+        const precio = option.getAttribute('data-precio');
+        const stock = option.getAttribute('data-stock');
+        
+        document.getElementById('precio_unitario').value = precio || '';
+        document.getElementById('stock_disponible').textContent = stock || '-';
+        document.getElementById('cantidad').max = stock || 1;
+        
+        calcularTotal();
+    }
+
+    function calcularTotal() {
+        const cantidad = parseFloat(document.getElementById('cantidad').value) || 0;
+        const precio = parseFloat(document.getElementById('precio_unitario').value) || 0;
+        const total = cantidad * precio;
+        
+        document.getElementById('total_estimado').textContent = '$' + total.toFixed(2);
+    }
+
+    document.getElementById('cantidad').addEventListener('input', calcularTotal);
+    document.getElementById('precio_unitario').addEventListener('input', calcularTotal);
+</script>
 {% endblock %}
 

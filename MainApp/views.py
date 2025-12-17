@@ -173,7 +173,7 @@ def agregar_categoria(request):
         if nombre:
             Categoria.objects.create(nombre_categoria=nombre)
             messages.success(request, f'Categoría "{nombre}" creada exitosamente.')
-            return redirect('admin:agregar_producto')
+            return redirect('admin:listar_productos')
         else:
             messages.error(request, 'El nombre de la categoría no puede estar vacío.')
 
@@ -189,7 +189,7 @@ def agregar_bodega(request):
         if nombre:
             Bodega.objects.create(nombre_bodega=nombre)
             messages.success(request, f'Bodega "{nombre}" creada exitosamente.')
-            return redirect('admin:agregar_producto')
+            return redirect('admin:listar_productos')
         else:
             messages.error(request, 'El nombre de la bodega no puede estar vacío.')
 

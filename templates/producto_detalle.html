@@ -52,6 +52,25 @@
                 <h5 class="fw-bold mt-4">DESCRIPCIÓN</h5>
                 <p>{{ producto.descripcion }}</p>
 
+                <!-- Tabla de Bodegas con Stock -->
+                <h5 class="fw-bold mt-4">DISPONIBILIDAD EN BODEGAS</h5>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Bodega</th>
+                                <th>Stock Disponible</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ producto.bodega.nombre_bodega }}</td>
+                                <td>{{ producto.stock }} unidades</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
                 <h5 class="fw-bold">ESPECIFICACIONES</h5>
                 <ul>
                     <li><strong>Aplicación:</strong> Lubricantes para motor</li>
