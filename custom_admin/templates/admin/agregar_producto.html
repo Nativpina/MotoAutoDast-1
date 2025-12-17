@@ -73,22 +73,36 @@
                     <!-- Categoría -->
                     <div class="mb-3">
                         <label for="categoria" class="form-label">Categoría</label>
-                        <select id="categoria" name="categoria" class="form-select" required>
-                            <option value="">Seleccione una categoría</option>
-                            {% for categoria in categorias %}
-                            <option value="{{ categoria.id }}">{{ categoria.nombre_categoria }}</option>
-                            {% endfor %}
-                        </select>
+                        {% if categorias %}
+                            <select id="categoria" name="categoria" class="form-select" required>
+                                <option value="">Seleccione una categoría</option>
+                                {% for categoria in categorias %}
+                                <option value="{{ categoria.id }}">{{ categoria.nombre_categoria }}</option>
+                                {% endfor %}
+                            </select>
+                        {% else %}
+                            <div class="alert alert-warning d-flex justify-content-between align-items-center">
+                                <span>¿No tienes ninguna categoría?</span>
+                                <a href="{% url 'admin:agregar_categoria' %}" class="btn btn-sm btn-primary">Añadir Categoría</a>
+                            </div>
+                        {% endif %}
                     </div>
                     <!-- Bodega -->
                     <div class="mb-3">
                         <label for="bodega" class="form-label">Bodega</label>
-                        <select id="bodega" name="bodega" class="form-select" required>
-                            <option value="">Seleccione una bodega</option>
-                            {% for bodega in bodegas %}
-                            <option value="{{ bodega.id }}">{{ bodega.nombre_bodega }}</option>
-                            {% endfor %}
-                        </select>
+                        {% if bodegas %}
+                            <select id="bodega" name="bodega" class="form-select" required>
+                                <option value="">Seleccione una bodega</option>
+                                {% for bodega in bodegas %}
+                                <option value="{{ bodega.id }}">{{ bodega.nombre_bodega }}</option>
+                                {% endfor %}
+                            </select>
+                        {% else %}
+                            <div class="alert alert-warning d-flex justify-content-between align-items-center">
+                                <span>¿No tienes ninguna bodega?</span>
+                                <a href="{% url 'admin:agregar_bodega' %}" class="btn btn-sm btn-primary">Añadir Bodega</a>
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="stock" class="form-label">Stock</label>

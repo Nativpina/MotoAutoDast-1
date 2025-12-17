@@ -114,11 +114,19 @@ def agregar_producto(request):
         form = ProductoForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect('listar_productos')
+            return redirect('admin:listar_productos')
     else:
         form = ProductoForm()
 
-    return render(request, 'admin/agregar_producto.html', {'form': form})
+    # Pasar categorías y bodegas al template
+    categorias = Categoria.objects.all()
+    bodegas = Bodega.objects.all()
+
+    return render(request, 'admin/agregar_producto.html', {
+        'form': form,
+        'categorias': categorias,
+        'bodegas': bodegas
+    })
 
 
 def editar_producto(request, producto_id):
@@ -147,9 +155,45 @@ def eliminar_producto(request, producto_id):
 
     if request.method == 'POST':
         producto.delete()
-        return redirect('listar_productos')
+        return redirect('admin:listar_productos')
 
     return render(request, 'admin/confirmar_eliminacion.html', {'producto': producto})
+
+
+# ================================
+#  CATEGORÍAS Y BODEGAS (Admin)
+# ================================
+
+def agregar_categoria(request):
+    if not request.user.is_superuser:
+        return redirect('/')
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre_categoria', '').strip()
+        if nombre:
+            Categoria.objects.create(nombre_categoria=nombre)
+            messages.success(request, f'Categoría "{nombre}" creada exitosamente.')
+            return redirect('admin:agregar_producto')
+        else:
+            messages.error(request, 'El nombre de la categoría no puede estar vacío.')
+
+    return render(request, 'admin/agregar_categoria.html')
+
+
+def agregar_bodega(request):
+    if not request.user.is_superuser:
+        return redirect('/')
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre_bodega', '').strip()
+        if nombre:
+            Bodega.objects.create(nombre_bodega=nombre)
+            messages.success(request, f'Bodega "{nombre}" creada exitosamente.')
+            return redirect('admin:agregar_producto')
+        else:
+            messages.error(request, 'El nombre de la bodega no puede estar vacío.')
+
+    return render(request, 'admin/agregar_bodega.html')
 
 
 # ================================

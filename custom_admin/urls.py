@@ -1,7 +1,10 @@
 from django.urls import path
 from .views import dashboard, admin_login, pagos_view
 from django.contrib.auth.views import LogoutView
-from MainApp.views import listar_productos, agregar_producto, editar_producto, eliminar_producto
+from MainApp.views import (
+    listar_productos, agregar_producto, editar_producto, eliminar_producto,
+    agregar_categoria, agregar_bodega
+)
 
 app_name = 'admin'
 
@@ -14,6 +17,9 @@ urlpatterns = [
     path('productos/agregar/', agregar_producto, name='agregar_producto'),
     path('productos/editar/<int:producto_id>/', editar_producto, name='editar_producto'),
     path('productos/eliminar/<int:producto_id>/', eliminar_producto, name='eliminar_producto'),
+
+    path('categorias/agregar/', agregar_categoria, name='agregar_categoria'),
+    path('bodegas/agregar/', agregar_bodega, name='agregar_bodega'),
 
     path('pagos/', pagos_view, name='pagos'),
 ]
