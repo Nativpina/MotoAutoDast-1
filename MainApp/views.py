@@ -64,6 +64,14 @@ def producto_detalle(request, id):
 #  REGISTRO Y LOGIN
 # ================================
 
+def custom_login_redirect(request):
+    """Redirige después del login según el tipo de usuario"""
+    if request.user.is_superuser:
+        return redirect('admin:dashboard')
+    else:
+        return redirect('inicio')
+
+
 def registro(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)

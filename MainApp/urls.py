@@ -11,6 +11,7 @@ urlpatterns = [
     path('neumaticos/', views.Neumaticos, name='lista_neumaticos'),
     path('repuestos/', views.Repuestos, name='lista_repuestos'),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('login-redirect/', views.custom_login_redirect, name='login_redirect'),
     path('producto/<int:id>/', views.producto_detalle, name='producto_detalle'),
     path('registro/', views.registro, name='registro'), 
     path('buscar/', views.buscar_productos, name='buscar_productos'),

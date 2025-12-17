@@ -5,8 +5,9 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
 from MainApp.models import Compra, Cliente, Producto, Categoria, Bodega, ProductoCompra, Visita
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, F
 from django.utils import timezone
+from datetime import timedelta
 
 def admin_login(req):
     try:
@@ -72,29 +73,35 @@ def dashboard(req):
         total=Sum('monto')
     )['total'] or 0
 
-    # ------------------- VISITAS POR MES -------------------
+    # ------------------- INGRESOS DIARIOS (ÚLTIMOS 30 DÍAS) -------------------
+    hoy = timezone.now().date()
+    hace_30_dias = hoy - timedelta(days=29)  # Cambiado a 29 para incluir hoy
+    
+    # Obtener ventas por día
+    ventas_por_dia = []
+    dias_labels = []
+    
+    for i in range(30):
+        dia = hace_30_dias + timedelta(days=i)
+        total_dia = Compra.objects.filter(
+            fecha_compra=dia,
+            estado='enviado'
+        ).aggregate(total=Sum('monto'))['total'] or 0
+        
+        ventas_por_dia.append(float(total_dia))
+        dias_labels.append(dia.strftime('%d/%m'))
 
-    meses_labels = [
-        "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-        "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
-    ]
-
-    visitas_data = [
-        Visita.objects.filter(fecha__month=i).count() for i in range(1, 13)
-    ]
-
-    # ------------------- CATEGORÍAS MÁS VISTAS -------------------
-
-    categorias_labels = []
-    categorias_valores = []
-
-    for categoria in Categoria.objects.all():
-        visitas_categoria = Visita.objects.filter(
-            producto__categoria=categoria
-        ).count()
-
-        categorias_labels.append(str(categoria.nombre_categoria))
-        categorias_valores.append(int(visitas_categoria))
+    # ------------------- VENTAS POR CATEGORÍA (TOP 5 en CLP) -------------------
+    ventas_categoria = ProductoCompra.objects.filter(
+        compra__estado='enviado'
+    ).values(
+        'producto__categoria__nombre_categoria'
+    ).annotate(
+        total_ventas=Sum(F('cantidad') * F('precio_unitario_venta'))
+    ).order_by('-total_ventas')[:5]
+    
+    categorias_labels = [v['producto__categoria__nombre_categoria'] for v in ventas_categoria]
+    categorias_valores = [float(v['total_ventas']) for v in ventas_categoria]
 
     # ------------------- CONTEXTO -------------------
 
@@ -102,8 +109,8 @@ def dashboard(req):
         "total_pedidos_pendientes": total_pedidos_pendientes,
         "total_pedidos_enviados": total_pedidos_enviados,
         "total_ventas": total_ventas,
-        "meses_labels": meses_labels,
-        "visitas_data": visitas_data,
+        "dias_labels": dias_labels,
+        "ventas_por_dia": ventas_por_dia,
         "categorias_labels": categorias_labels,
         "categorias_valores": categorias_valores,
     }

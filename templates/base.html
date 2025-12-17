@@ -34,6 +34,9 @@
                     <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'lista_neumaticos' %}">Neumáticos</a></li>
                     <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'lista_repuestos' %}">Repuestos</a></li>
                     <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'form_contactos' %}">Contacto</a></li>
+                    {% if user.is_superuser %}
+                    <li class="nav-item"><a class="nav-link me-3 fw-bold" href="{% url 'admin:dashboard' %}">ADMIN</a></li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link me-3 fw-bold position-relative" href="{% url 'view_cart' %}">
                             <i class="bi bi-cart3"></i> 

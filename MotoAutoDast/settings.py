@@ -15,42 +15,36 @@ AZURE_STATIC_CONTAINER = os.environ.get("AZURE_CONTAINER", "static")
 # STATIC URL local. Esta es la URL de acceso que se usará.
 STATIC_URL = '/static/'
 
-# Leer CSRF_TRUSTED_ORIGINS de variable de entorno
-csrf_origins_str = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
-if csrf_origins_str:
-    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins_str.split(",")]
-else:
-    CSRF_TRUSTED_ORIGINS = [
-        "https://motoautodast-dzgvgmfvcaddgzbs.chilecentral-01.azurewebsites.net",
-    ]
+CSRF_TRUSTED_ORIGINS = [
+    "https://motoautodast-dzgvgmfvcaddgzbs.chilecentral-01.azurewebsites.net",
+]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
+
+CSRF_COOKIE_SECURE = True
 
 # Carpeta local que collectstatic llenará (es correcta)
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # LOCAL static dir (de tus apps y la carpeta raíz 'static')
-static_dir = os.path.join(BASE_DIR, "static")
-if os.path.exists(static_dir):
-    STATICFILES_DIRS = [static_dir]
-else:
-    STATICFILES_DIRS = []
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
 
 # Usar WhiteNoise en producción para compresión y cache de largo plazo.
 # En desarrollo evitamos los problemas del manifest storage estableciendo
 # el storage por defecto cuando DEBUG=True.
-DEBUG = os.environ.get("DEBUG", "False") == "True"
+DEBUG = os.environ.get("DEBUG", "True") == "True"
 
-# Configurar cookies seguras solo en producción
-CSRF_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_SECURE = not DEBUG
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+else:
+    # almacenamiento por defecto en DEV para evitar errores de manifest
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
-# Storage más simple y permisivo para evitar errores 500
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-
-# Tiempo de cache que entregará WhiteNoise (en segundos)
-WHITENOISE_MAX_AGE = 31536000 if not DEBUG else 0
+# Tiempo de cache que entregará WhiteNoise (en segundos). 1 año por defecto.
+WHITENOISE_MAX_AGE = 31536000
 
 # ==========================================================
 # MEDIA LOCAL (NO AZURE)
@@ -65,13 +59,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
-
-# Leer ALLOWED_HOSTS de variable de entorno (puede ser string con comas)
-allowed_hosts_str = os.environ.get("ALLOWED_HOSTS", "*")
-if allowed_hosts_str == "*":
-    ALLOWED_HOSTS = ["*"]
-else:
-    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(",")]
+ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     'custom_admin',
@@ -137,33 +125,8 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = '/admin/'  # Redirige al login del admin
-LOGIN_REDIRECT_URL = 'dashboard'
+LOGIN_REDIRECT_URL = 'login_redirect'
 LOGOUT_REDIRECT_URL = 'inicio'
-
-# ==========================================================
-# LOGGING (para ver errores en Azure)
-# ==========================================================
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
-            'propagate': False,
-        },
-    },
-}
 
 # ==========================================================
 # WEBPAY
