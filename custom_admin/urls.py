@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import dashboard, admin_login, pagos_view
+from .views import dashboard, admin_login, pagos_view, venta_manual_view
 from django.contrib.auth.views import LogoutView
 from MainApp.views import (
     listar_productos, agregar_producto, editar_producto, eliminar_producto,
@@ -22,4 +22,5 @@ urlpatterns = [
     path('bodegas/agregar/', agregar_bodega, name='agregar_bodega'),
 
     path('pagos/', pagos_view, name='pagos'),
+    path('ventas/manual/', venta_manual_view, name='venta_manual'),
 ]

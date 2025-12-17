@@ -4,12 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
-from MainApp.models import Compra, Cliente
-from django.db.models import Sum
-from MainApp.models import Compra, Producto, Categoria
+from MainApp.models import Compra, Cliente, Producto, Categoria, Bodega, ProductoCompra, Visita
 from django.db.models import Sum, Count
 from django.utils import timezone
-from MainApp.models import Visita
 
 def admin_login(req):
     try:
@@ -118,69 +115,117 @@ def pagos_view(request):
     if not request.user.is_superuser:
         return redirect('/')
     
-    # Manejar creación de venta manual
-    if request.method == 'POST' and 'venta_manual' in request.POST:
+    pagos = Compra.objects.select_related('cliente').order_by('-fecha_compra')
+    
+    return render(request, 'admin/pagos.html', {'pagos': pagos})
+
+
+@login_required
+def venta_manual_view(request):
+    if not request.user.is_superuser:
+        return redirect('/')
+    
+    # Obtener filtros
+    categoria_id = request.GET.get('categoria')
+    bodega_id = request.GET.get('bodega')
+    busqueda = request.GET.get('q', '').strip()
+    
+    # Filtrar productos
+    productos = Producto.objects.filter(stock__gt=0)
+    
+    if categoria_id:
+        productos = productos.filter(categoria_id=categoria_id)
+    
+    if bodega_id:
+        productos = productos.filter(bodega_id=bodega_id)
+    
+    if busqueda:
+        productos = productos.filter(nombre_producto__icontains=busqueda)
+    
+    productos = productos.select_related('categoria', 'bodega').order_by('nombre_producto')
+    
+    # Manejar POST - registrar venta
+    if request.method == 'POST':
         producto_id = request.POST.get('producto_id')
-        cantidad = int(request.POST.get('cantidad', 0))
-        precio_unitario = request.POST.get('precio_unitario')
+        cantidad = request.POST.get('cantidad')
         cliente_nombre = request.POST.get('cliente_nombre', '').strip()
+        fecha_venta = request.POST.get('fecha_venta')
+        monto_personalizado = request.POST.get('monto_personalizado')
+        usar_monto_custom = request.POST.get('usar_monto_custom') == 'on'
         
         # Validaciones
-        if not producto_id or cantidad <= 0 or not precio_unitario or not cliente_nombre:
-            messages.error(request, 'Todos los campos son obligatorios y la cantidad debe ser mayor a 0.')
-        else:
-            try:
-                producto = Producto.objects.get(id=producto_id)
-                precio_unitario = float(precio_unitario)
-                
-                # Validar stock disponible
-                if cantidad > producto.stock:
-                    messages.error(request, f'Stock insuficiente. Solo hay {producto.stock} unidades disponibles.')
-                else:
-                    # Crear o buscar cliente genérico para ventas manuales
-                    cliente, created = Cliente.objects.get_or_create(
-                        nombre_cliente=cliente_nombre,
-                        defaults={'email': 'venta_manual@local.com', 'num': 0}
-                    )
-                    
-                    # Crear la compra
-                    compra = Compra.objects.create(
-                        fecha_compra=timezone.now().date(),
-                        cliente=cliente,
-                        estado='enviado',
-                        monto=cantidad * precio_unitario,
-                        tipo_entrega='retiro'
-                    )
-                    
-                    # Crear el producto de compra
-                    ProductoCompra.objects.create(
-                        compra=compra,
-                        producto=producto,
-                        cantidad=cantidad,
-                        precio_unitario_venta=precio_unitario
-                    )
-                    
-                    # Restar del stock
-                    producto.stock -= cantidad
-                    producto.save()
-                    
-                    messages.success(request, f'Venta manual registrada exitosamente. Stock actualizado: {producto.stock} unidades.')
-                    return redirect('admin:pagos')
-                    
-            except Producto.DoesNotExist:
-                messages.error(request, 'Producto no encontrado.')
-            except ValueError:
-                messages.error(request, 'Precio unitario inválido.')
-            except Exception as e:
-                messages.error(request, f'Error al registrar la venta: {str(e)}')
+        try:
+            if not all([producto_id, cantidad, cliente_nombre, fecha_venta]):
+                raise ValueError('Todos los campos son obligatorios.')
+            
+            producto = Producto.objects.get(id=producto_id)
+            cantidad = int(cantidad)
+            
+            if cantidad <= 0:
+                raise ValueError('La cantidad debe ser mayor a 0.')
+            
+            if cantidad > producto.stock:
+                raise ValueError(f'Stock insuficiente. Solo hay {producto.stock} unidades disponibles.')
+            
+            # Calcular monto
+            if usar_monto_custom:
+                monto_total = float(monto_personalizado)
+                precio_unitario = monto_total / cantidad
+            else:
+                precio_unitario = producto.costo
+                monto_total = cantidad * precio_unitario
+            
+            # Crear o buscar cliente
+            cliente, created = Cliente.objects.get_or_create(
+                nombre_cliente=cliente_nombre,
+                defaults={'email': 'venta_manual@local.com', 'num': 0}
+            )
+            
+            # Crear la compra
+            compra = Compra.objects.create(
+                fecha_compra=fecha_venta,
+                cliente=cliente,
+                estado='enviado',
+                monto=monto_total,
+                tipo_entrega='retiro'
+            )
+            
+            # Crear el producto de compra
+            ProductoCompra.objects.create(
+                compra=compra,
+                producto=producto,
+                cantidad=cantidad,
+                precio_unitario_venta=precio_unitario
+            )
+            
+            # Restar del stock
+            producto.stock -= cantidad
+            producto.save()
+            
+            messages.success(request, f'Venta manual registrada exitosamente. Stock actualizado: {producto.stock} unidades.')
+            return redirect('admin:pagos')
+            
+        except ValueError as ve:
+            messages.error(request, str(ve))
+        except Producto.DoesNotExist:
+            messages.error(request, 'Producto no encontrado.')
+        except Exception as e:
+            messages.error(request, f'Error al registrar la venta: {str(e)}')
     
-    pagos = Compra.objects.select_related('cliente').order_by('-fecha_compra')
-    productos = Producto.objects.filter(stock__gt=0).order_by('nombre_producto')
+    # Datos para filtros
+    categorias = Categoria.objects.all()
+    bodegas = Bodega.objects.all()
     
-    return render(request, 'admin/pagos.html', {
-        'pagos': pagos,
-        'productos': productos
-    })
+    context = {
+        'productos': productos,
+        'categorias': categorias,
+        'bodegas': bodegas,
+        'categoria_seleccionada': categoria_id,
+        'bodega_seleccionada': bodega_id,
+        'busqueda': busqueda,
+    }
+    
+    return render(request, 'admin/venta_manual.html', context)
 
 
 def ajustes(request):
